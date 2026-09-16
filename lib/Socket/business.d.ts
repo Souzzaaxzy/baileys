@@ -64,6 +64,11 @@ export function makeBusinessSocket(config: any): {
     sendMessageAck: (node: any, errorCode: any) => Promise<void>;
     sendRetryRequest: (node: any, forceIncludeKeys?: boolean) => Promise<void>;
     rejectCall: (callId: any, callFrom: any) => Promise<void>;
+    /**
+     * Signal that the offer arrived and this device is ringing (SIP 180 equivalent).
+     * Not an acceptance, and no media is carried.
+     */
+    preacceptCall: (callId: any, callFrom: any) => Promise<void>;
     fetchMessageHistory: (count: any, oldestMsgKey: any, oldestMsgTimestamp: any) => Promise<any>;
     requestPlaceholderResend: (messageKey: any, msgData: any) => Promise<any>;
     messageRetryManager: import("../Utils/message-retry-manager.js").MessageRetryManager | null;
