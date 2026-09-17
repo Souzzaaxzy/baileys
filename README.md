@@ -181,6 +181,7 @@ This fork designed for production use with a focus on clarity and safety:
    - 🤖 [`ai`](#-ai-icon) - AI icon on message
    - 📣 [`mentionAll`](#-mention) - Mention all group participants without requiring their JIDs in `mentions` or `mentionedJid` **[NEW]**
    - 🔧 [`ephemeral`](#-ephemeral), [`groupStatus`](#%E2%80%8D%E2%80%8D-group-status), [`isLottie`](#-lottie-sticker), [`spoiler`](#-spoiler), [`viewOnce`](#%EF%B8%8F-view-once), [`viewOnceV2`](#%EF%B8%8F-view-once-v2), [`viewOnceV2Extension`](#%EF%B8%8F-view-once-v2-extension), [`interactiveAsTemplate`](#%EF%B8%8F-interactive) - Message wrappers
+   - 🔁 [`canBeReshared`](#-reshare-canbereshared) - Marks the message as reshareable (native share/add-to-status on the client) **[NEW]**
    - 🔒 [`secureMetaServiceLabel`](#%EF%B8%8F-secure-meta-service-label) - Secure meta service label on message **[NEW]**
    - 📄 [`raw`](#-raw) - Build your message manually **(DO NOT USE FOR EXPLOITATION)**
 
@@ -1334,6 +1335,32 @@ sock.sendMessage(jid, {
    groupStatus: true
 })
 ```
+
+#### 🔁 Reshare (`canBeReshared`)
+
+> [!NOTE]
+> Marks the message as reshareable, so recipients get the native **reshare /
+> add-to-status** action on the client. Use it together with `groupStatus` (or
+> any other wrapper) when the content should be shareable.
+
+```javascript
+sock.sendMessage(jid, {
+   text: '📢 Group Status!',
+   groupStatus: true,
+   canBeReshared: true   // --- sets contextInfo.featureEligibilities.canBeReshared
+})
+```
+
+> [!IMPORTANT]
+> The client reads this permission from the **message payload**. Without it,
+> statuses posted by a library do not show the reshare button even when
+> "Allow Sharing" is enabled in the account's status privacy settings.
+> The button itself belongs to the official WhatsApp client -- this flag only
+> declares the permission.
+>
+> Known limitation (WhatsApp platform side, not this library): audio statuses
+> (`ptt: true`) do not offer reshare regardless of this flag.
+
 
 #### 🐱 Lottie Sticker
 
