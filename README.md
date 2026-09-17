@@ -129,6 +129,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🕒 Ephemeral](#-ephemeral)
    - [📰 External Ad Reply](#-external-ad-reply)
    - [🧑‍🧑‍🧒 Group Status](#%E2%80%8D%E2%80%8D-group-status)
+   - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - [🐱 Lottie Sticker](#-lottie-sticker)
    - [🧩 Raw](#-raw)
    - [🏷️ Secure Meta Service Label](#%EF%B8%8F-secure-meta-service-label)
@@ -164,6 +165,7 @@ This fork designed for production use with a focus on clarity and safety:
 - 📩 Expanded messages support for:
    - 🖼️ [Album Message](#%EF%B8%8F-album-image--video)
    - 👤 [Group Status Message](#%E2%80%8D%E2%80%8D-group-status)
+   - 🔁 [Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - 👉🏻 [Interactive Message](#-sending-interactive-messages) (buttons, lists, native flows, templates, carousels).
    - 🎞️ [Status Mention Message](#%EF%B8%8F-status-mention)
    - 📦 [Sticker Pack Message](#-sticker-pack)
@@ -1324,7 +1326,26 @@ sock.sendMessage(jid, {
 #### 🧑‍🧑‍🧒 Group Status
 
 > [!NOTE]
-> It only works in group chat (`@g.us`)
+> Publishes a native **group status** inside the group itself. It only works in
+> group chat (`@g.us`) -- the content goes to the group JID, never to
+> `status@broadcast`, so it is neither a personal status nor a regular message.
+
+Internally this flag does three things at once:
+
+1. sets `contextInfo.isGroupStatus = true`;
+2. wraps the content into `groupStatusMessageV2`;
+3. adds the `is_group_status='true'` attribute to the stanza.
+
+Text status:
+
+```javascript
+sock.sendMessage(jid, {
+   text: '👥 Group Status!',
+   groupStatus: true
+})
+```
+
+Image status:
 
 ```javascript
 sock.sendMessage(jid, {
@@ -1336,12 +1357,50 @@ sock.sendMessage(jid, {
 })
 ```
 
+Video status:
+
+```javascript
+sock.sendMessage(jid, {
+   video: {
+      url: './path/to/video.mp4'
+   },
+   caption: '👥 Group Status!',
+   groupStatus: true
+})
+```
+
+Audio status:
+
+```javascript
+sock.sendMessage(jid, {
+   audio: {
+      url: './path/to/audio.mp3'
+   },
+   mimetype: 'audio/mp4',
+   ptt: false, // --- Set true to send it as Voice Note
+   groupStatus: true
+})
+```
+
+Combining with other options -- e.g. a reshareable status (see
+[Reshare](#-reshare-canbereshared)):
+
+```javascript
+sock.sendMessage(jid, {
+   text: '📢 Group Status!',
+   groupStatus: true,
+   canBeReshared: true
+})
+```
+
 #### 🔁 Reshare (`canBeReshared`)
 
 > [!NOTE]
 > Marks the message as reshareable, so recipients get the native **reshare /
 > add-to-status** action on the client. Use it together with `groupStatus` (or
 > any other wrapper) when the content should be shareable.
+
+The shorthand -- just pass the flag along with `groupStatus`:
 
 ```javascript
 sock.sendMessage(jid, {
@@ -1350,6 +1409,36 @@ sock.sendMessage(jid, {
    canBeReshared: true   // --- sets contextInfo.featureEligibilities.canBeReshared
 })
 ```
+
+The flag is a shorthand for the permission only: it sets
+`contextInfo.featureEligibilities.canBeReshared` and touches nothing else.
+
+To also send the rest of the status metadata that the official client includes
+(and to keep full control over it), pass the whole `contextInfo` yourself. These
+are plain WhatsApp protobuf fields -- nothing this fork invented, so the same
+payload can be built with any other library:
+
+```javascript
+sock.sendMessage(jid, {
+   text: '📢 Group Status!',
+   groupStatus: true,
+   contextInfo: {
+      featureEligibilities: {
+         canBeReshared: true,
+         canReceiveMultiReact: true
+      },
+      statusSourceType: 4,                          // --- TEXT
+      statusAttributions: [{ type: 10 }],           // --- STATUS_CLOSE_SHARING
+      statusAudienceMetadata: { audienceType: 1 }   // --- CLOSE_FRIENDS
+   }
+})
+```
+
+Both give you a reshareable group status (content wrapped into
+`groupStatusMessageV2`, with `isGroupStatus` in `contextInfo`); the second one
+just carries more status metadata. The shorthand and a manual `contextInfo` can
+even be combined -- the flag merges into whatever `contextInfo` is already there
+without overwriting it.
 
 > [!IMPORTANT]
 > The client reads this permission from the **message payload**. Without it,
