@@ -131,6 +131,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🧑‍🧑‍🧒 Group Status](#%E2%80%8D%E2%80%8D-group-status)
    - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - [👥 Members-only group message](#members-only-group-message)
+   - [🧪 Experimental — pairwise group retransmission](#-experimental--pairwise-group-retransmission)
    - [🐱 Lottie Sticker](#-lottie-sticker)
    - [🧩 Raw](#-raw)
    - [🏷️ Secure Meta Service Label](#%EF%B8%8F-secure-meta-service-label)
@@ -1521,6 +1522,54 @@ private keys — proving an included member gets the Sender Key and can read the
 message, while an excluded participant has no `<to>` node at all. It has **not**
 been validated on a real device against the live WhatsApp servers; treat the
 client-side rendering of the excluded entry as unverified until someone does.
+
+#### 🧪 Experimental — pairwise group retransmission
+
+> [!WARNING]
+> **Research feature, off by default, not wired into any send path.** This is an
+> isolated entry point for studying the "retransmit a group message pairwise"
+> flow from the *Send and Pretend* transcript-consistency PoC
+> (<https://github.com/sbaresearch/transcript-consistency>,
+> `code/whatsapp/poc-client`). Nothing calls it unless you do, and every normal
+> send — group, 1:1, status, broadcast, the stock retry — is untouched when the
+> flag is absent. It does **not** implement "invisible" messages and it does not
+> affect `recipientMode`.
+
+Retransmits one group message pairwise to a single device, through the existing
+retry machinery:
+
+```javascript
+await sock.relayGroupMessagePairwiseExperimental(groupJid, message, {
+   participant: '5511...@lid',        // the single target device
+   messageId: '3EB0...',
+   retryCount: 1,                     // optional; becomes <enc count="…">
+   experimentalPayload: { text: '…' } // optional; per-recipient substitution
+})
+```
+
+**What it does.** Baileys already builds the pairwise retry stanza: with a
+`participant`, `relayMessage` emits `<message to="<group>" participant="<device>">`
+carrying a `<enc type="msg" count="N">` encrypted with
+`signalRepository.encryptMessage` for that device, plus the Sender Key
+distribution message. This API is a thin, documented wrapper over exactly that
+path — it does **not** introduce a second retry system, a second Sender Key
+architecture, or any new protobuf field.
+
+**Where the PoC differs.** The PoC's `ByteFlip` mode corrupts the group
+ciphertext so recipients emit retry receipts, and its `PlaintextModifierCallback`
+can then substitute different content for one recipient. The substitution is the
+only PoC capability Baileys did not already expose, and it lives here behind
+`experimentalPayload`. The corrupt-the-ciphertext half is intentionally **not**
+implemented: in Baileys retries are driven by inbound receipts
+(`handleReceipt → sendMessagesAgain`), so provoking them is an operational step
+— call this API when a receipt arrives — not a send-path change.
+
+**What is proven / not proven.** `tests/pairwise-experimental.test.js` runs the
+real send path with only the transport recorded, then **decrypts** the pairwise
+`<enc>` with the target device's own private keys — so the target really can
+read it, and the addressed device, `count` and content substitution are
+measured. The live client's handling of such a stanza, and whether a real
+WhatsApp server accepts it, are **not** verified here.
 
 #### 🐱 Lottie Sticker
 

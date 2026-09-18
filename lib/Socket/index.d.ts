@@ -213,7 +213,7 @@ declare function makeWASocket(config: any): {
     };
     issuePrivacyTokens: (jids: any, timestamp: any) => Promise<any>;
     assertSessions: (jids: any, force: any) => Promise<boolean>;
-    relayMessage: (jid: any, message: any, { messageId: msgId, participant, additionalAttributes, additionalNodes, useUserDevicesCache, useCachedGroupMetadata, addBizAttributes, statusJidList, recipientMode, recipientParticipants }: {
+    relayMessage: (jid: any, message: any, { messageId: msgId, participant, additionalAttributes, additionalNodes, useUserDevicesCache, useCachedGroupMetadata, addBizAttributes, statusJidList, recipientMode, recipientParticipants, experimentalPairwiseRetry, experimentalPayload }: {
         messageId: any;
         participant: any;
         additionalAttributes: any;
@@ -224,7 +224,15 @@ declare function makeWASocket(config: any): {
         statusJidList: any;
         recipientMode: any;
         recipientParticipants: any;
+        experimentalPairwiseRetry: any;
+        experimentalPayload: any;
     }) => Promise<any>;
+    relayGroupMessagePairwiseExperimental: (groupJid: any, message: any, options?: {}) => Promise<{
+        groupJid: any;
+        messageId: any;
+        participant: any;
+        participantDevice: any;
+    }>;
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;
     readMessages: (keys: any) => Promise<void>;
