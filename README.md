@@ -1629,6 +1629,24 @@ for states learned from a received distribution message. So the rotation appends
 a fully-formed `SenderKeyState(id, 0, chainKey, keyPair)`, keeping the previous
 state available for decryption.
 
+**The rotation is per message, and reverting is not optional.** The rotated key
+becomes the group's *active* key, but it is only distributed to the allowed
+participants. If it stayed active, the next normal send would encrypt with a key
+most participants never received — and `sender-key-memory` would (correctly) say
+they already have a key, so nobody would be sent a new distribution message and
+the **whole group** would go unreadable except the rotation target. The send path
+therefore restores the previous state immediately after the ciphertext and the
+distribution nodes are built. `tests/sender-key-rotation-integrity.test.js` pins
+this down: without the revert, a normal message after a rotation is unreadable by
+everyone but the target, and the test fails.
+
+**Retry does not reveal the rotated key.** A device that cannot decrypt asks for
+a retry, and Baileys answers with the group's *current* key. Because the rotation
+has already reverted, that is the old key, not the rotated one.
+`tests/sender-key-rotation-retry.test.js` measures the ids: the retry delivers a
+different key from the one the rotated message used, and the excluded admin still
+cannot read the rotated ciphertext.
+
 **What is proven (measured, by decrypting):**
 
 - `tests/sender-key-rotation.test.js` — the isolated crypto: a record holds A
@@ -1638,14 +1656,20 @@ state available for decryption.
 - `tests/sender-key-rotation-send.test.js` — the real send path: only the
   allowed participants (including every device of a multi-device member) are
   addressed; members decrypt the rotated message and admins — holding the old
-  key — fail with `No session found to decrypt message`. Skipping the rotation
-  or ignoring the subset each make these tests fail.
+  key — fail with `No session found to decrypt message`.
+- `tests/sender-key-rotation-integrity.test.js` — the group stays healthy: after
+  a rotation the sender holds one state again and the next normal message is
+  readable by everyone.
+- `tests/sender-key-rotation-retry.test.js` — retry does not hand over the
+  rotated key.
 
-**Not proven.** Server acceptance, real-client rendering, retry behaviour on
-real devices, and persistence across a device restart. Rollback exists for
-safety: a failed send drops the added state
-(`signalRepository.rollbackSenderKeyRotation`), and the previous state was never
-removed.
+Skipping the rotation, ignoring the participant subset, or dropping the revert
+each make these tests fail.
+
+**Not proven.** Server acceptance, real-client rendering, and whether any of it
+survives a device restart. Rollback exists for safety: a failed send drops the
+added state (`signalRepository.rollbackSenderKeyRotation`), and the previous
+state was never removed.
 
 #### 🐱 Lottie Sticker
 
