@@ -132,6 +132,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - [👥 Members-only group message](#members-only-group-message)
    - [🧪 Experimental — pairwise group retransmission](#-experimental--pairwise-group-retransmission)
+   - [🔑 Experimental — selective Sender Key rotation](#-experimental--selective-sender-key-rotation)
    - [🐱 Lottie Sticker](#-lottie-sticker)
    - [🧩 Raw](#-raw)
    - [🏷️ Secure Meta Service Label](#%EF%B8%8F-secure-meta-service-label)
@@ -1590,6 +1591,61 @@ real send path with only the transport recorded, then **decrypts** the pairwise
 read it, and the addressed device, `count` and content substitution are
 measured. The live client's handling of such a stanza, and whether a real
 WhatsApp server accepts it, are **not** verified here.
+
+#### 🔑 Experimental — selective Sender Key rotation
+
+> [!WARNING]
+> **Research feature, off by default, and NOT proven against the WhatsApp
+> server.** It is proven cryptographically and through the real send path with
+> recorded transport, but **no real device test was performed**, so whether the
+> server accepts a message whose Sender Key only some members received — and how
+> real clients render it — is unknown. Do not treat the isolation as achieved in
+> production.
+
+This addresses the limitation measured in `tests/members-only-leak.test.js`: a
+restricted message is readable by anyone who already holds the Sender Key,
+because the key is reused across sends. Rotating the key removes that.
+
+```javascript
+await sock.relayGroupMessageWithSenderKeyRotation(groupJid, message, {
+   allowedParticipants: ['5511...@lid', '5511...@lid'],
+   messageId: '3EB0...'
+})
+```
+
+**How it works.** It reuses the normal send path end to end. The flag makes
+`relayMessage` append a **new Sender Key state** before encrypting, and narrow
+the fan-out to `allowedParticipants`. Everything downstream follows: the
+`<enc type="skmsg">` is produced by the rotated key (because
+`GroupCipher.encrypt()` uses the newest state) and the Sender Key Distribution
+Message distributed to those devices is the matching one. It is still a normal
+group message — `to="<group>"`, no `participant`, no `count` — and it does not
+use `sendMessagesAgain` or the pairwise retry path.
+
+**Why append instead of replacing.** `SenderKeyRecord.setSenderKeyState()`
+clears the whole record, which would break every member still holding the old
+key; `addSenderKeyState()` only fills the *public* signing key, and that shape is
+for states learned from a received distribution message. So the rotation appends
+a fully-formed `SenderKeyState(id, 0, chainKey, keyPair)`, keeping the previous
+state available for decryption.
+
+**What is proven (measured, by decrypting):**
+
+- `tests/sender-key-rotation.test.js` — the isolated crypto: a record holds A
+  and B at once with different ids, chain keys and signing keys; `encrypt()`
+  picks the newest; a device holding only A **cannot** decrypt a B ciphertext
+  while B-holders can; two B messages share the id and advance the chain.
+- `tests/sender-key-rotation-send.test.js` — the real send path: only the
+  allowed participants (including every device of a multi-device member) are
+  addressed; members decrypt the rotated message and admins — holding the old
+  key — fail with `No session found to decrypt message`. Skipping the rotation
+  or ignoring the subset each make these tests fail.
+
+**Not proven.** Server acceptance, real-client rendering, retry behaviour on
+real devices, and persistence across a device restart. Rollback exists for
+safety: a failed send drops the added state
+(`signalRepository.rollbackSenderKeyRotation`), and the previous state was never
+removed.
 
 #### 🐱 Lottie Sticker
 

@@ -1,6 +1,7 @@
 export * from "./generics.js";
 export * from "./recipient-selector.js";
 export * from "./pairwise-experimental.js";
+export * from "./sender-key-rotation.js";
 export * from "./decode-wa-message.js";
 export * from "./messages.js";
 export * from "./messages-media.js";
