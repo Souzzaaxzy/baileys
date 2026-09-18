@@ -32,6 +32,12 @@ export function makeMessagesSocket(config: any): {
         messageId: any;
         allowedParticipants: any;
     }>;
+    suppressedRetryRegistry: {
+        register(messageId: any): void;
+        isSuppressed(messageId: any): boolean;
+        clear(): void;
+        readonly size: number;
+    };
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;
     readMessages: (keys: any) => Promise<void>;
