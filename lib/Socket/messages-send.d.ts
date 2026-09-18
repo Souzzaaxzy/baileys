@@ -5,7 +5,7 @@ export function makeMessagesSocket(config: any): {
     };
     issuePrivacyTokens: (jids: any, timestamp: any) => Promise<any>;
     assertSessions: (jids: any, force: any) => Promise<boolean>;
-    relayMessage: (jid: any, message: any, { messageId: msgId, participant, additionalAttributes, additionalNodes, useUserDevicesCache, useCachedGroupMetadata, addBizAttributes, statusJidList }: {
+    relayMessage: (jid: any, message: any, { messageId: msgId, participant, additionalAttributes, additionalNodes, useUserDevicesCache, useCachedGroupMetadata, addBizAttributes, statusJidList, recipientMode, recipientParticipants }: {
         messageId: any;
         participant: any;
         additionalAttributes: any;
@@ -14,6 +14,8 @@ export function makeMessagesSocket(config: any): {
         useCachedGroupMetadata: any;
         addBizAttributes: any;
         statusJidList: any;
+        recipientMode: any;
+        recipientParticipants: any;
     }) => Promise<any>;
     sendReceipt: (jid: any, participant: any, messageIds: any, type: any) => Promise<void>;
     sendReceipts: (keys: any, type: any) => Promise<void>;

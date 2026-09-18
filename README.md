@@ -130,6 +130,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [📰 External Ad Reply](#-external-ad-reply)
    - [🧑‍🧑‍🧒 Group Status](#%E2%80%8D%E2%80%8D-group-status)
    - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
+   - [👥 Members-only group message](#members-only-group-message)
    - [🐱 Lottie Sticker](#-lottie-sticker)
    - [🧩 Raw](#-raw)
    - [🏷️ Secure Meta Service Label](#%EF%B8%8F-secure-meta-service-label)
@@ -1450,6 +1451,76 @@ without overwriting it.
 > Known limitation (WhatsApp platform side, not this library): audio statuses
 > (`ptt: true`) do not offer reshare regardless of this flag.
 
+
+#### 👥 Members-only group message
+
+> [!WARNING]
+> **Read the limitations before using this.** The stanza is accepted by the
+> server, and a restricted recipient genuinely cannot decrypt the message — but
+> the recipient can still tell that a message exists in the group. This is not a
+> way to say something to part of a group without them knowing something was
+> said. See the limitations below.
+
+Narrows the Sender Key fan-out of a group message to a subset of the group, so
+the Sender Key material reaches only those devices. Everyone else is not
+addressed at all.
+
+```javascript
+// Only the non-admin participants can read this.
+sock.sendMessage(groupJid, { text: 'Members only 👋' }, {
+   recipientMode: 'members-only'
+})
+
+// The inverse, and an explicit list, are also supported.
+sock.sendMessage(groupJid, { text: 'Admins only' }, { recipientMode: 'admins-only' })
+sock.sendMessage(groupJid, { text: 'Just you two' }, {
+   recipientParticipants: ['5511...@lid', '5511...@s.whatsapp.net']
+})
+```
+
+`recipientMode` accepts `'all'` (the default behaviour), `'admins-only'` and
+`'members-only'`. Admin roles come from the group metadata (`admin` is `'admin'`
+for a promoted admin and `'superadmin'` for the creator) — there is no name,
+number or position heuristic. `recipientParticipants` takes precedence over
+`recipientMode` when both are given.
+
+**How it works.** A group message is one Sender Key ciphertext (`<enc
+type="skmsg">`) plus a per-device `<to>` node carrying the Sender Key
+distribution message. The send path already derives its device list from the
+group participants, so restricting the participant list restricts the fan-out:
+`resolveGroupRecipients` (see `lib/Utils/recipient-selector.js`) filters the list
+before device discovery, and everything downstream follows. The `phash` is
+computed from that same (now partial) device list, which keeps it consistent
+with what was actually addressed.
+
+When a restriction is active the `<enc>` nodes are also marked
+`decrypt-fail="hide"`, so clients of the excluded participants hide the entry
+instead of showing a "waiting for this message" placeholder.
+
+**Limitations**
+
+- **The server still knows the message exists.** The stanza is addressed to the
+  group, so excluded participants receive the message reference and may see a
+  notification/preview for it. They cannot read the content, but they are not
+  unaware.
+- **Individuals, not roles.** The subset is resolved from the participant list at
+  send time. Someone promoted to admin afterwards is not retroactively excluded
+  from messages already sent, and a new member does not receive old ones. Each
+  send resolves the group metadata fresh.
+- **Group settings still apply.** Announcement-only groups etc. are enforced by
+  the server, independently of this option.
+- **Only group messages.** On a 1:1 chat there is no Sender Key; the option is
+  ignored there.
+- **Not a confidentiality boundary against WhatsApp.** This narrows the
+  client-side fan-out; it says nothing about what the server can observe.
+
+This was verified end to end in `tests/members-only-send.test.js`: the real send
+path runs against a recorded transport, pairwise sessions are built with real
+key material, and the test decrypts what each device received with its own
+private keys — proving an included member gets the Sender Key and can read the
+message, while an excluded participant has no `<to>` node at all. It has **not**
+been validated on a real device against the live WhatsApp servers; treat the
+client-side rendering of the excluded entry as unverified until someone does.
 
 #### 🐱 Lottie Sticker
 
