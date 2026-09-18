@@ -1500,6 +1500,18 @@ instead of showing a "waiting for this message" placeholder.
 
 **Limitations**
 
+- **It only excludes participants who never received the Sender Key.** This is
+  the important one, and it was measured, not assumed. The Sender Key is
+  **reused** across sends: `GroupSessionBuilder.create()` only generates a key
+  when the record is empty, and `GroupCipher.encrypt()` continues the **same**
+  chain. So a participant who received the Sender Key from any earlier normal
+  message still holds it, and can decrypt a later restricted message with it —
+  the restriction only stops the *new* distribution, not the decryption. An
+  excluded participant genuinely cannot decrypt **only** if it never received
+  the key (a member added after the last normal send, or a group where the very
+  first message was already restricted). See
+  `tests/members-only-leak.test.js`, which decrypts a restricted message as an
+  excluded admin and asserts that it succeeds.
 - **The server still knows the message exists.** The stanza is addressed to the
   group, so excluded participants receive the message reference and may see a
   notification/preview for it. They cannot read the content, but they are not
@@ -1522,6 +1534,14 @@ private keys — proving an included member gets the Sender Key and can read the
 message, while an excluded participant has no `<to>` node at all. It has **not**
 been validated on a real device against the live WhatsApp servers; treat the
 client-side rendering of the excluded entry as unverified until someone does.
+
+`tests/members-only-leak.test.js` covers the reuse problem: it sends a normal
+message (both an admin and a member receive the Sender Key), then a restricted
+message, and shows the excluded admin decrypting the restricted ciphertext with
+the key it already had. The same file also shows that rotating the Sender Key
+(clearing both `sender-key` and `sender-key-memory`) before the restricted send
+**does** block that admin — so rotation, not recipient filtering, is what would
+be needed for the stronger guarantee.
 
 #### 🧪 Experimental — pairwise group retransmission
 
