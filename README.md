@@ -1594,6 +1594,13 @@ WhatsApp server accepts it, are **not** verified here.
 
 #### 🔑 Experimental — selective Sender Key rotation
 
+> [!CAUTION]
+> **DISPROVEN ON A REAL DEVICE.** A live test showed the message was readable by
+> **every** participant, including the ones excluded from the key. The rotation
+> is cryptographically real, but it cannot produce selective visibility, because
+> the server is never told about the subset. See "Why it does not work on
+> WhatsApp" below. Do not use this expecting privacy.
+
 > [!WARNING]
 > **Research feature, off by default, and NOT proven against the WhatsApp
 > server.** It is proven cryptographically and through the real send path with
@@ -1688,6 +1695,70 @@ each make these tests fail.
 survives a device restart. Rollback exists for safety: a failed send drops the
 added state (`signalRepository.rollbackSenderKeyRotation`), and the previous
 state was never removed.
+
+**Why it does not work on WhatsApp — measured, not guessed.**
+
+A live test settled it: the command logged `autorizados=1`, and the message was
+still readable by everyone. The wire capture (`tests/rotation-wire-comparison.test.js`)
+shows why, and it is not a bug that can be fixed in this design.
+
+A group message stanza is:
+
+```
+<message to="<group JID>" id="…" type="text" addressing_mode="lid">
+   <enc type="skmsg" …>ciphertext</enc>     <- one ciphertext for the whole group
+   <participants>                            <- per-device Sender Key nodes
+      <to jid="device">…</to>
+   </participants>
+</message>
+```
+
+The addressing is **identical** for a normal send and for a rotated one — both
+target the group JID, with no `participant` and no `recipient` attribute:
+
+```
+targets of every message stanza sent: [ '120363000000000001@g.us', '120363000000000001@g.us' ]
+```
+
+The `autorizados=1` line in the bot came from the **client-side** count of the
+argument that was passed, not from anything on the wire. On the wire the only
+difference is *how many `<to>` nodes carry a Sender Key*. The server receives the
+same instruction in both cases: "deliver this group message". It fans out to all
+participants, and nothing in the stanza tells it otherwise.
+
+Layers, which must not be confused:
+
+| Layer | What it does | Does it limit who receives? |
+|---|---|---|
+| `recipientMode` / `recipientParticipants` | picks which devices get an SKDM node | **No.** Client-side only. |
+| `sender-key-memory` | bookkeeping: who has already been sent a key | **No.** Local state, never sent. |
+| SenderKeyDistributionMessage | distributes the key to chosen devices | **No.** It is inside the group stanza. |
+| Sender Key encryption | encrypts with a group key | **No**, and it *reuses* the key, so past recipients keep access. |
+| pairwise retry | re-sends the message to one device on request | **No** — and it *re-delivers the content* to whoever asks. |
+| `participant` on the stanza | marks a retry resend to one device | Only meaningful for retries, not group visibility. |
+| group JID (`to`) | the actual addressing | **Yes** — this is the only thing the server acts on. |
+
+Two further reasons the real test looked like a total leak:
+
+1. **Retry re-delivers the content.** Baileys answers a group retry with
+   `relayMessage({ participant })`, which re-sends the message **pairwise
+   encrypted to the asking device**. Measured in
+   `tests/sender-key-rotation-retry-content.test.js`: an excluded admin that
+   retries reads the full text. Since the rotated stanza carries
+   `decrypt-fail="hide"`, a compliant client should hide the entry instead of
+   retrying — but whether it does is client behaviour, and on a real device the
+   content got out.
+2. **A recipient with no key asks for one.** A device that cannot decrypt sends a
+   retry receipt; the resend is pairwise to that device, so the content is
+   recovered regardless of the group key.
+
+**Conclusion.** Limiting the Sender Key distribution limits *which clients can
+decrypt the group ciphertext quietly* — it does **not** limit what the server
+delivers, and it does **not** survive the retry path. There is no attribute, node
+or message type in the protocol as implemented here that lets one group message
+appear for some participants and not others; the server fans out to the whole
+group by design, and the only addressing the client controls is the group JID
+itself.
 
 #### 🐱 Lottie Sticker
 
