@@ -1640,12 +1640,30 @@ distribution nodes are built. `tests/sender-key-rotation-integrity.test.js` pins
 this down: without the revert, a normal message after a rotation is unreadable by
 everyone but the target, and the test fails.
 
-**Retry does not reveal the rotated key.** A device that cannot decrypt asks for
-a retry, and Baileys answers with the group's *current* key. Because the rotation
-has already reverted, that is the old key, not the rotated one.
-`tests/sender-key-rotation-retry.test.js` measures the ids: the retry delivers a
-different key from the one the rotated message used, and the excluded admin still
-cannot read the rotated ciphertext.
+**Retry does not reveal the rotated key — but it DOES re-send the content.**
+Two separate measurements, and the second one matters more:
+
+- The Sender Key handed over on a retry is the group's *current* key, not the
+  rotated one (`tests/sender-key-rotation-retry.test.js`), so the rotated
+  key material is not disclosed.
+- However, Baileys answers a group retry with `relayMessage({ participant })`,
+  which re-sends the message **pairwise encrypted to the asking device**. An
+  excluded admin that retries therefore recovers the **text**.
+  `tests/sender-key-rotation-retry-content.test.js` measures this: the admin
+  decrypts the retry node and gets the full content back.
+
+So the current build does **not** hide the content from an admin whose client
+asks for a retry. The mitigation is that the rotated stanza carries
+`decrypt-fail="hide"`, which tells the client to hide the entry instead of
+showing a placeholder — whether that also stops the client from retrying is a
+**client behaviour this harness cannot observe**, and it is the deciding factor.
+If the client does retry, the isolation does not hold. Withholding content on the
+retry path for rotated messages would close this, and is the next step.
+
+**Known structural divergences from a normal fan-out:** the rotated stanza
+carries no `phash` (unlike a normal `skmsg` fan-out), and its stanza-level
+`<participants>` list contains only the allowed devices. A server that validates
+either against the full member list could reject or repair the message.
 
 **What is proven (measured, by decrypting):**
 
