@@ -24,12 +24,16 @@ const JPEG = Buffer.from([
 const fakeUpload = async () => ({ url: 'https://mmg.whatsapp.net/fake', directPath: '/v/fake' });
 
 /**
- * Reproduz a montagem que o sendMessage faz para os filhos: associa cada
- * imagem ao poll com MEDIA_POLL, na ordem das opcoes.
+ * Reproduz a montagem que o sendMessage faz para os filhos: cada imagem vai
+ * embrulhada em `pollCreationOptionImageMessage` e associada ao poll com
+ * MEDIA_POLL, na ordem das opcoes.
+ *
+ * O envelope e essencial: sem ele o cliente trata as imagens como fotos soltas
+ * em vez de opcoes da enquete.
  */
-function montarFilhos(parentKey, preparedImages, parentRemoteJid = GROUP) {
+function montarFilhos(parentKey, preparedImages) {
   return preparedImages.map(prepared => ({
-    ...prepared,
+    pollCreationOptionImageMessage: { message: prepared },
     messageContextInfo: {
       ...(prepared.messageContextInfo || {}),
       messageAssociation: {
@@ -66,15 +70,21 @@ describe('sendMessage (imagem poll): pai + filhos associados', () => {
     assert.equal(enviados.length, 4, '1 poll + 3 imagens');
     assert.ok(enviados[0].pollCreationMessageV3, 'primeiro e o poll');
     for (let i = 1; i < enviados.length; i++) {
-      const inner = normalizeMessageContent(enviados[i]);
-      assert.ok(inner.imageMessage, `filho ${i} e imagem`);
+      const filho = enviados[i];
+      // O envelope e o que faz o cliente tratar como imagem de OPCAO.
+      assert.ok(
+        filho.pollCreationOptionImageMessage,
+        `filho ${i} vem embrulhado em pollCreationOptionImageMessage`
+      );
+      const inner = normalizeMessageContent(filho.pollCreationOptionImageMessage.message);
+      assert.ok(inner.imageMessage, `filho ${i} contem uma imagem`);
       assert.equal(
-        enviados[i].messageContextInfo.messageAssociation.associationType,
+        filho.messageContextInfo.messageAssociation.associationType,
         proto.MessageAssociation.AssociationType.MEDIA_POLL,
         `filho ${i} associado como MEDIA_POLL`
       );
       assert.equal(
-        enviados[i].messageContextInfo.messageAssociation.parentMessageKey.id,
+        filho.messageContextInfo.messageAssociation.parentMessageKey.id,
         'POLL-1',
         `filho ${i} aponta para o pai`
       );
@@ -121,7 +131,9 @@ describe('sendMessage (imagem poll): pai + filhos associados', () => {
     for (const filho of filhos) {
       const bytes = proto.Message.encode(proto.Message.create(filho)).finish();
       const dec = proto.Message.decode(bytes);
-      assert.ok(dec.imageMessage, 'imagem sobrevive');
+      assert.ok(dec.pollCreationOptionImageMessage, 'o envelope sobrevive ao encode/decode');
+      const inner = normalizeMessageContent(dec.pollCreationOptionImageMessage.message);
+      assert.ok(inner.imageMessage, 'a imagem sobrevive dentro do envelope');
       assert.equal(
         dec.messageContextInfo.messageAssociation.associationType,
         proto.MessageAssociation.AssociationType.MEDIA_POLL
