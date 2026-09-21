@@ -606,6 +606,72 @@ sock.sendMessage(jid, {
 })
 ```
 
+#### 🏬 Catalog Card
+
+The catalog card is the shop entry point: it renders the business picture with a
+title and a description, and tapping it opens the catalog. On the wire it is the
+`catalog` field of the same `productMessage` used by the product above, so the
+caller sends it the same way — `catalogImage` goes through the normal media
+upload.
+
+```javascript
+sock.sendMessage(jid, {
+   catalog: {
+      catalogImage: {
+         url: './path/to/image.jpg'
+      },
+      title: '🛍️ My shop',
+      description: 'Everything in one place'
+   },
+   body: '👋🏻 Take a look at my catalog!',
+   footer: '@souzzaaxzy/baileys',
+   businessOwnerJid: '0@s.whatsapp.net'
+})
+```
+
+A message may carry `product` and `catalog` at the same time; both end up in the
+`productMessage`.
+
+#### 🧾 Multi-Product Message (MPM)
+
+The MPM lists products from the business catalog so the customer can browse.
+WhatsApp has no separate `ProductListMessage` type: an MPM is a `listMessage`
+with `listType = PRODUCT_LIST` plus a `productListInfo`. The fork builds that for
+you from a `productList` input.
+
+```javascript
+sock.sendMessage(jid, {
+   productList: {
+      businessOwnerJid: '0@s.whatsapp.net',
+      productSections: [
+         {
+            title: '🔥 Offers',
+            products: [{ productId: 'PROD-1' }, { productId: 'PROD-2' }]
+         }
+      ],
+      // optional header image of the list
+      headerImage: { productId: 'PROD-1', jpegThumbnail: bufferImage }
+   },
+   title: '🛒 Catalog',
+   text: 'Choose an item below',
+   buttonText: 'Open catalog',
+   footer: '@souzzaaxzy/baileys'
+})
+```
+
+The helpers are exported from the package root, so the payload can also be built
+or inspected without a socket:
+
+```javascript
+import {
+   toProductListInfo,
+   parseProductListInfo,
+   toBusinessProfileNode,
+   toCoverPhotoNode,
+   parseBusinessProfileNode
+} from '@souzzaaxzy/baileys'
+```
+
 #### 📊 Poll
 
 ```javascript
@@ -2089,6 +2155,30 @@ sock.resyncAppState(['regular', 'critical_block'], true)
 // --- Get business profile
 const profile = await sock.getBusinessProfile(jid)
 console.dir(profile, { depth: null })
+
+// Same profile read through the business socket, parsed by the shared
+// BinaryNode parser (returns every `website`/`category`, plus the cover photo id):
+const profileV2 = await sock.getBusinessProfileV2(jid)
+console.dir(profileV2, { depth: null })
+
+// --- Update business profile (partial update: only the fields you pass change)
+await sock.updateBusinessProfile({
+   address: 'Rua 1, 100',
+   email: 'contact@example.com',
+   description: 'We sell cool things',
+   websites: ['https://example.com', 'https://blog.example.com'],
+   hours: {
+      timezone: 'America/Sao_Paulo',
+      days: [
+         { day: 'mon', mode: 'specific_hours', openTimeInMinutes: 480, closeTimeInMinutes: 1080 },
+         { day: 'sun', mode: 'closed' }
+      ]
+   }
+})
+
+// --- Cover photo of the profile
+const coverId = await sock.updateCoverPhoto(bufferImage)
+await sock.removeCoverPhoto(coverId)
 ```
 
 #### 🛒 Business Management

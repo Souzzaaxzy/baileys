@@ -18,6 +18,24 @@ export function makeBusinessSocket(config: any): {
     getCollections: (jid: any, limit?: number) => Promise<{
         collections: any;
     }>;
+    /**
+     * Read a business profile (`w:biz` / `business_profile`) using the shared
+     * BinaryNode parser. Returns `undefined` when the number has no profile.
+     */
+    getBusinessProfileV2: (jid: any) => Promise<{
+        wid: any;
+        address: any;
+        description: any;
+        website: any[];
+        email: any;
+        category: any;
+        categories: any[];
+        coverPhotoId: any;
+        business_hours: {
+            timezone: any;
+            business_config: any[];
+        };
+    }>;
     productCreate: (create: any) => Promise<{
         id: any;
         imageUrls: {
