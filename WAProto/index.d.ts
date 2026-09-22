@@ -9712,6 +9712,28 @@ export namespace proto {
             }
         }
 
+        interface IMarkAsVerifiedAction {
+            userJidString?: (string|null);
+            verified?: (boolean|null);
+            verifiedIdentityKey?: (Uint8Array|null);
+            actionSeq?: (number|Long|null);
+        }
+
+        class MarkAsVerifiedAction implements IMarkAsVerifiedAction {
+            constructor(p?: proto.Message.IMarkAsVerifiedAction);
+            public userJidString?: (string|null);
+            public verified?: (boolean|null);
+            public verifiedIdentityKey?: (Uint8Array|null);
+            public actionSeq?: (number|Long|null);
+            public static create(properties?: proto.Message.IMarkAsVerifiedAction): proto.Message.MarkAsVerifiedAction;
+            public static encode(m: proto.Message.IMarkAsVerifiedAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.MarkAsVerifiedAction;
+            public static fromObject(d: { [k: string]: any }): proto.Message.MarkAsVerifiedAction;
+            public static toObject(m: proto.Message.MarkAsVerifiedAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
         interface IProtocolMessage {
             key?: (proto.IMessageKey|null);
             type?: (proto.Message.ProtocolMessage.Type|null);
@@ -9741,6 +9763,7 @@ export namespace proto {
             afterReadDuration?: (number|null);
             chatThemeSetting?: (proto.Message.IChatThemeSetting|null);
             aiMetadataOperation?: (proto.IAIMetadataOperation|null);
+            markAsVerifiedAction?: (proto.Message.IMarkAsVerifiedAction|null);
         }
 
         class ProtocolMessage implements IProtocolMessage {
@@ -9773,6 +9796,7 @@ export namespace proto {
             public afterReadDuration?: (number|null);
             public chatThemeSetting?: (proto.Message.IChatThemeSetting|null);
             public aiMetadataOperation?: (proto.IAIMetadataOperation|null);
+            public markAsVerifiedAction?: (proto.Message.IMarkAsVerifiedAction|null);
             public static create(properties?: proto.Message.IProtocolMessage): proto.Message.ProtocolMessage;
             public static encode(m: proto.Message.IProtocolMessage, w?: $protobuf.Writer): $protobuf.Writer;
             public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ProtocolMessage;
@@ -9814,7 +9838,8 @@ export namespace proto {
                 AI_MEDIA_COLLECTION_MESSAGE = 31,
                 MESSAGE_UNSCHEDULE = 32,
                 CHAT_THEME_SETTING = 34,
-                AI_METADATA_OPERATION = 35
+                AI_METADATA_OPERATION = 35,
+                MARK_AS_VERIFIED_ACTION = 36
             }
         }
 

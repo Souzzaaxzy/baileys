@@ -70712,6 +70712,207 @@ export const proto = $root.proto = (() => {
             return ProductMessage;
         })();
 
+        Message.MarkAsVerifiedAction = (function() {
+
+            function MarkAsVerifiedAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            MarkAsVerifiedAction.prototype.userJidString = null;
+            MarkAsVerifiedAction.prototype.verified = null;
+            MarkAsVerifiedAction.prototype.verifiedIdentityKey = null;
+            MarkAsVerifiedAction.prototype.actionSeq = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MarkAsVerifiedAction.prototype, "_userJidString", {
+                get: $util.oneOfGetter($oneOfFields = ["userJidString"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MarkAsVerifiedAction.prototype, "_verified", {
+                get: $util.oneOfGetter($oneOfFields = ["verified"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MarkAsVerifiedAction.prototype, "_verifiedIdentityKey", {
+                get: $util.oneOfGetter($oneOfFields = ["verifiedIdentityKey"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(MarkAsVerifiedAction.prototype, "_actionSeq", {
+                get: $util.oneOfGetter($oneOfFields = ["actionSeq"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            MarkAsVerifiedAction.create = function create(properties) {
+                return new MarkAsVerifiedAction(properties);
+            };
+
+            MarkAsVerifiedAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.userJidString != null && Object.hasOwnProperty.call(m, "userJidString"))
+                    w.uint32(10).string(m.userJidString);
+                if (m.verified != null && Object.hasOwnProperty.call(m, "verified"))
+                    w.uint32(16).bool(m.verified);
+                if (m.verifiedIdentityKey != null && Object.hasOwnProperty.call(m, "verifiedIdentityKey"))
+                    w.uint32(26).bytes(m.verifiedIdentityKey);
+                if (m.actionSeq != null && Object.hasOwnProperty.call(m, "actionSeq"))
+                    w.uint32(32).uint64(m.actionSeq);
+                return w;
+            };
+
+            MarkAsVerifiedAction.encodeDelimited = function encodeDelimited(m, w) {
+                return this.encode(m, w).ldelim();
+            };
+
+            MarkAsVerifiedAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.MarkAsVerifiedAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.userJidString = r.string();
+                            break;
+                        }
+                    case 2: {
+                            m.verified = r.bool();
+                            break;
+                        }
+                    case 3: {
+                            m.verifiedIdentityKey = r.bytes();
+                            break;
+                        }
+                    case 4: {
+                            m.actionSeq = r.uint64();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            MarkAsVerifiedAction.decodeDelimited = function decodeDelimited(r) {
+                if (!(r instanceof $Reader))
+                    r = new $Reader(r);
+                return this.decode(r, r.uint32());
+            };
+
+            MarkAsVerifiedAction.verify = function verify(m) {
+                if (typeof m !== "object" || m === null)
+                    return "object expected";
+                var properties = {};
+                if (m.userJidString != null && m.hasOwnProperty("userJidString")) {
+                    properties._userJidString = 1;
+                    if (!$util.isString(m.userJidString))
+                        return "userJidString: string expected";
+                }
+                if (m.verified != null && m.hasOwnProperty("verified")) {
+                    properties._verified = 1;
+                    if (typeof m.verified !== "boolean")
+                        return "verified: boolean expected";
+                }
+                if (m.verifiedIdentityKey != null && m.hasOwnProperty("verifiedIdentityKey")) {
+                    properties._verifiedIdentityKey = 1;
+                    if (!(m.verifiedIdentityKey && typeof m.verifiedIdentityKey.length === "number" || $util.isString(m.verifiedIdentityKey)))
+                        return "verifiedIdentityKey: buffer expected";
+                }
+                if (m.actionSeq != null && m.hasOwnProperty("actionSeq")) {
+                    properties._actionSeq = 1;
+                    if (!$util.isInteger(m.actionSeq) && !(m.actionSeq && $util.isInteger(m.actionSeq.low) && $util.isInteger(m.actionSeq.high)))
+                        return "actionSeq: integer|Long expected";
+                }
+                return null;
+            };
+
+            MarkAsVerifiedAction.fromObject = function fromObject(o) {
+                if (o instanceof $root.proto.Message.MarkAsVerifiedAction)
+                    return o;
+                var m = new $root.proto.Message.MarkAsVerifiedAction();
+                if (o.userJidString != null)
+                    m.userJidString = String(o.userJidString);
+                if (o.verified != null)
+                    m.verified = Boolean(o.verified);
+                if (o.verifiedIdentityKey != null)
+                    if (typeof o.verifiedIdentityKey === "string")
+                        $util.base64.decode(o.verifiedIdentityKey, m.verifiedIdentityKey = $util.newBuffer($util.base64.length(o.verifiedIdentityKey)), 0);
+                    else if (o.verifiedIdentityKey.length >= 0)
+                        m.verifiedIdentityKey = o.verifiedIdentityKey;
+                if (o.actionSeq != null)
+                    if ($util.Long)
+                        (m.actionSeq = $util.Long.fromValue(o.actionSeq)).unsigned = true;
+                    else if (typeof o.actionSeq === "string")
+                        m.actionSeq = parseInt(o.actionSeq, 10);
+                    else if (typeof o.actionSeq === "number")
+                        m.actionSeq = o.actionSeq;
+                    else if (typeof o.actionSeq === "object")
+                        m.actionSeq = new $util.LongBits(o.actionSeq.low >>> 0, o.actionSeq.high >>> 0).toNumber(true);
+                return m;
+            };
+
+            MarkAsVerifiedAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.userJidString != null && m.hasOwnProperty("userJidString")) {
+                    d.userJidString = m.userJidString;
+                    if (o.oneofs)
+                        d._userJidString = "userJidString";
+                }
+                if (m.verified != null && m.hasOwnProperty("verified")) {
+                    d.verified = m.verified;
+                    if (o.oneofs)
+                        d._verified = "verified";
+                }
+                if (m.verifiedIdentityKey != null && m.hasOwnProperty("verifiedIdentityKey")) {
+                    d.verifiedIdentityKey = o.bytes === String ? $util.base64.encode(m.verifiedIdentityKey, 0, m.verifiedIdentityKey.length) : o.bytes === Array ? Array.prototype.slice.call(m.verifiedIdentityKey) : m.verifiedIdentityKey;
+                    if (o.oneofs)
+                        d._verifiedIdentityKey = "verifiedIdentityKey";
+                }
+                if (m.actionSeq != null && m.hasOwnProperty("actionSeq")) {
+                    if (typeof m.actionSeq === "number")
+                        d.actionSeq = o.longs === String ? String(m.actionSeq) : m.actionSeq;
+                    else
+                        d.actionSeq = o.longs === String ? $util.Long.prototype.toString.call(m.actionSeq) : o.longs === Number ? new $util.LongBits(m.actionSeq.low >>> 0, m.actionSeq.high >>> 0).toNumber(true) : m.actionSeq;
+                    if (o.oneofs)
+                        d._actionSeq = "actionSeq";
+                }
+                return d;
+            };
+
+            MarkAsVerifiedAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            MarkAsVerifiedAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.MarkAsVerifiedAction";
+            };
+
+            return MarkAsVerifiedAction;
+        })();
+
         Message.ProtocolMessage = (function() {
 
             function ProtocolMessage(p) {
@@ -70749,6 +70950,7 @@ export const proto = $root.proto = (() => {
             ProtocolMessage.prototype.afterReadDuration = null;
             ProtocolMessage.prototype.chatThemeSetting = null;
             ProtocolMessage.prototype.aiMetadataOperation = null;
+            ProtocolMessage.prototype.markAsVerifiedAction = null;
 
             let $oneOfFields;
 
@@ -70920,6 +71122,12 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ProtocolMessage.prototype, "_markAsVerifiedAction", {
+                get: $util.oneOfGetter($oneOfFields = ["markAsVerifiedAction"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             ProtocolMessage.create = function create(properties) {
                 return new ProtocolMessage(properties);
             };
@@ -70983,6 +71191,8 @@ export const proto = $root.proto = (() => {
                     $root.proto.Message.ChatThemeSetting.encode(m.chatThemeSetting, w.uint32(242).fork()).ldelim();
                 if (m.aiMetadataOperation != null && Object.hasOwnProperty.call(m, "aiMetadataOperation"))
                     $root.proto.AIMetadataOperation.encode(m.aiMetadataOperation, w.uint32(250).fork()).ldelim();
+                if (m.markAsVerifiedAction != null && Object.hasOwnProperty.call(m, "markAsVerifiedAction"))
+                    $root.proto.Message.MarkAsVerifiedAction.encode(m.markAsVerifiedAction, w.uint32(258).fork()).ldelim();
                 return w;
             };
 
@@ -71109,6 +71319,10 @@ export const proto = $root.proto = (() => {
                         }
                     case 31: {
                             m.aiMetadataOperation = $root.proto.AIMetadataOperation.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 32: {
+                            m.markAsVerifiedAction = $root.proto.Message.MarkAsVerifiedAction.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     default:
@@ -71548,6 +71762,11 @@ export const proto = $root.proto = (() => {
                     if (o.oneofs)
                         d._aiMetadataOperation = "aiMetadataOperation";
                 }
+                if (m.markAsVerifiedAction != null && m.hasOwnProperty("markAsVerifiedAction")) {
+                    d.markAsVerifiedAction = $root.proto.Message.MarkAsVerifiedAction.toObject(m.markAsVerifiedAction, o);
+                    if (o.oneofs)
+                        d._markAsVerifiedAction = "markAsVerifiedAction";
+                }
                 return d;
             };
 
@@ -71594,6 +71813,7 @@ export const proto = $root.proto = (() => {
                 values[valuesById[32] = "MESSAGE_UNSCHEDULE"] = 32;
                 values[valuesById[34] = "CHAT_THEME_SETTING"] = 34;
                 values[valuesById[35] = "AI_METADATA_OPERATION"] = 35;
+                values[valuesById[36] = "MARK_AS_VERIFIED_ACTION"] = 36;
                 return values;
             })();
 
