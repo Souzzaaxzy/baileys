@@ -133,6 +133,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - [👥 Members-only group message](#members-only-group-message)
    - [🔐 Per-message Sender Key rotation](#-per-message-sender-key-rotation-relaygroupmessagewithsenderkeyrotation)
+   - [🧪 MarkAsVerifiedAction (experimental)](#-markasverifiedaction-experimental)
    - [🐱 Lottie Sticker](#-lottie-sticker)
    - [🧩 Raw](#-raw)
    - [🏷️ Secure Meta Service Label](#%EF%B8%8F-secure-meta-service-label)
@@ -1747,6 +1748,69 @@ rotation cost, not the network):
 Each protected message carries its **own** SKDM and its **own** sender key id,
 and a fresh device fed only that message's SKDM decrypts it — so no protected
 message depends on another's temporary key.
+
+#### 🧪 MarkAsVerifiedAction (experimental)
+
+> [!IMPORTANT]
+> This is **experimental and observational**. Nothing here claims that any
+> account gains a verified badge. The name of the action is not evidence.
+
+The structure exists in the schema (verified against WhatsApp Web's own internal
+spec, `Message$MarkAsVerifiedAction`):
+
+```proto
+message MarkAsVerifiedAction {
+  optional string userJidString       = 1;  // STRING
+  optional bool   verified            = 2;  // BOOL
+  optional bytes  verifiedIdentityKey = 3;  // BYTES
+  optional uint64 actionSeq           = 4;  // UINT64
+}
+```
+
+Its parent is `Message.ProtocolMessage`, field **32**, with
+`ProtocolMessage.Type.MARK_AS_VERIFIED_ACTION = 36`:
+
+```proto
+optional MarkAsVerifiedAction markAsVerifiedAction = 32;
+```
+
+**It is not App State.** There is no `markAsVerified*` in `SyncActionValue`, so
+there is no `SyncdPatch` / `SyncdMutation` / `SyncdValue` / LTHash path for it.
+Building one would invent a transport the schema does not describe.
+
+Sending (through the existing relay — no second transport):
+
+```javascript
+await sock.sendMarkAsVerifiedAction({
+   userJidString: '5511999999999@s.whatsapp.net', // PN or LID; not converted
+   verified: true                                  // omit to leave it ABSENT
+   // verifiedIdentityKey: ...                     // never fabricated
+   // actionSeq: ...                               // never guessed
+})
+```
+
+Receiving (observational):
+
+```javascript
+sock.ev.on('chats.update', updates => {
+   for (const u of updates) {
+      if (u.markAsVerifiedAction) { /* what actually arrived */ }
+   }
+})
+```
+
+Honest scope:
+
+- **The direction is not established.** No client code that *originates* this
+  action was found — WhatsApp Web's bundle only defines the schema. Sending is
+  an experiment: the server may ignore or reject it.
+- **`verified` absent ≠ `verified: false`.** Omitted fields stay absent on the
+  wire; the helpers preserve that distinction.
+- **`verifiedIdentityKey` is never fabricated.** No random bytes, no other
+  account's key. If there is no legitimate value, the field is simply omitted.
+- **The identity key is never logged.** Diagnostics report its byte *length*
+  only.
+- **Fails closed.** An invalid JID or payload throws; nothing is sent.
 
 #### 🐱 Lottie Sticker
 
