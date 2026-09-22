@@ -132,6 +132,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🧑‍🧑‍🧒 Group Status](#%E2%80%8D%E2%80%8D-group-status)
    - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - [👥 Members-only group message](#members-only-group-message)
+   - [🔐 Per-message Sender Key rotation](#-per-message-sender-key-rotation-relaygroupmessagewithsenderkeyrotation)
    - [🐱 Lottie Sticker](#-lottie-sticker)
    - [🧩 Raw](#-raw)
    - [🏷️ Secure Meta Service Label](#%EF%B8%8F-secure-meta-service-label)
@@ -1681,6 +1682,71 @@ the key it already had. The same file also shows that rotating the Sender Key
 (clearing both `sender-key` and `sender-key-memory`) before the restricted send
 **does** block that admin — so rotation, not recipient filtering, is what would
 be needed for the stronger guarantee.
+
+#### 🔐 Per-message Sender Key rotation (`relayGroupMessageWithSenderKeyRotation`)
+
+This is the stronger guarantee the note above points at, exposed as one call:
+
+```javascript
+await sock.relayGroupMessageWithSenderKeyRotation(groupJid, content.message, {
+   allowedParticipants: ['5511...@lid', '5512...@lid'], // members only
+   messageId: generatedId
+})
+```
+
+What it does, in order, for **each** protected message:
+
+1. **rotates** the group Sender Key — appends a NEW state (new id, chain key and
+   signing key pair) without destroying the previous one, so older messages stay
+   decryptable;
+2. **restricts the fan-out** to `allowedParticipants` *before* device discovery,
+   so the SKDM, the `<to>` nodes, the `phash` and the ciphertext all follow the
+   subset;
+3. encrypts the message with the **new** state and attaches the matching SKDM;
+4. marks the `<enc>` `decrypt-fail="hide"`;
+5. **registers the messageId for retry suppression**;
+6. **rolls back** the temporary state.
+
+Points worth knowing before using it:
+
+- **The rollback runs in a `finally`.** It happens on success, on error, on an
+  exception thrown by encryption or distribution, on a timeout and on a
+  transport failure. If it did not, the temporary key would stay active and the
+  group would keep encrypting with a key only the authorized subset ever
+  received — the group would go unreadable for everyone else.
+- **Exactly one rollback per failure.** There are two rollback paths (the inner
+  `finally` and the wrapper's `catch`); the wrapper only runs when the inner one
+  did not, which the tests assert by counting calls.
+- **Retry is withheld per message.** An excluded participant that asks for a
+  resend gets nothing, because answering would re-send the content **pairwise**
+  to exactly the device the rotation left without the key. Suppression is keyed
+  by `messageId`, so retries of ordinary messages are untouched.
+- **Fails closed.** An invalid JID, an empty participant list or a restriction
+  that matches nobody throws — it never falls back to sending to the whole
+  group.
+- **`decrypt-fail="hide"` is not the protection.** It only tells the client not
+  to render a placeholder. The protection is that an unauthorized device never
+  receives the key material.
+- **Concurrency.** Rotations for the same group are serialized, so their windows
+  (rotate → encrypt → distribute → rollback) cannot overlap — an overlap would
+  make both `pop()` calls remove the wrong state. Rotations of different groups
+  still run in parallel.
+
+Measurements from `tests/sender-key-rotation-burst.test.js` (real Signal
+sessions, real decryption, local loopback transport — so these bound the
+rotation cost, not the network):
+
+| burst | stanzas | unique sender key ids | admin decrypts | burst time | avg/message |
+|---|---|---|---|---|---|
+| 1 | 1 | 1 | 0 | 16.8 ms | 16.8 ms |
+| 5 | 5 | 5 | 0 | 44.1 ms | 8.8 ms |
+| 10 | 10 | 10 | 0 | 96.3 ms | 9.6 ms |
+| 25 | 25 | 25 | 0 | 280.4 ms | 11.2 ms |
+| 50 | 50 | 50 | 0 | 514.1 ms | 10.3 ms |
+
+Each protected message carries its **own** SKDM and its **own** sender key id,
+and a fresh device fed only that message's SKDM decrypts it — so no protected
+message depends on another's temporary key.
 
 #### 🐱 Lottie Sticker
 
