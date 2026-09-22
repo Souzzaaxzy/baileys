@@ -118,6 +118,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🔘 Buttons](#-buttons)
    - [📋 List](#-list)
    - [🗄️ Interactive](#%EF%B8%8F-interactive)
+   - [🎬 Carousel with Media (Image & Video)](#-carousel-with-media-image--video)
    - [🫙 Hydrated Template](#-hydrated-template)
 - [💳 Sending Payment Messages](#-sending-payment-messages)
    - [➕ Invite Payment](#-invite-payment)
@@ -165,6 +166,7 @@ This fork designed for production use with a focus on clarity and safety:
 ### 📨 Messages Handling & Compatibility
 - 📩 Expanded messages support for:
    - 🖼️ [Album Message](#%EF%B8%8F-album-image--video)
+   - 🎬 [Carousel with Media (Image & Video)](#-carousel-with-media-image--video) **[NEW]**
    - 👤 [Group Status Message](#%E2%80%8D%E2%80%8D-group-status)
    - 🔁 [Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - 👉🏻 [Interactive Message](#-sending-interactive-messages) (buttons, lists, native flows, templates, carousels).
@@ -1266,6 +1268,78 @@ sock.sendMessage(jid, {
    quoted: message
 })
 ```
+
+#### 🎬 Carousel with Media (Image & Video)
+
+A carousel card header accepts **image**, **video** and **product**. Images and
+videos go through the regular media pipeline (upload, encryption, thumbnail), so
+buffers and streams work exactly like in the other media methods.
+
+Video card:
+
+```javascript
+sock.sendMessage(jid, {
+   text: '🎬 Carousel with video!',
+   footer: '@souzzaaxzy/baileys',
+   cards: [{
+      video: {
+         url: './path/to/video.mp4'
+      },
+      caption: '🎬 Video 1'
+   }, {
+      video: {
+         url: './path/to/video.mp4'
+      },
+      caption: '🎬 Video 2',
+      nativeFlow: [{
+         text: '🌐 Source',
+         url: 'https://github.com/Souzzaaxzy/baileys'
+      }]
+   }]
+}, {
+   quoted: message
+})
+```
+
+Mixed image + video carousel (each card keeps its own media, in order):
+
+```javascript
+sock.sendMessage(jid, {
+   text: '🗂️ Mixed carousel!',
+   cards: [{
+      image: {
+         url: './path/to/image.jpg'
+      },
+      caption: '🖼️ Image'
+   }, {
+      video: {
+         url: './path/to/video.mp4'
+      },
+      caption: '🎬 Video'
+   }, {
+      image: {
+         url: './path/to/image.jpg'
+      },
+      caption: '🖼️ Image 2'
+   }]
+}, {
+   quoted: message
+})
+```
+
+Per-card options that also apply to video:
+
+- `gifPlayback: true` — sends the video as a GIF (muted, looping);
+- `ptv: true` — sends the video as a video note; it is normalised into the
+  card's `videoMessage` header;
+- `seconds` — duration, when it should not be computed with FFmpeg;
+- `thumbnail` — a custom `jpegThumbnail` for the card;
+- `title` / `subtitle` — shown next to the media.
+
+> [!NOTE]
+> `caption` and `text` are interchangeable for the card body. A card with media
+> but **no** `caption`/`text` is valid: the media is still attached to the card.
+> A card without `nativeFlow` is also valid — it simply has no buttons.
 
 #### 🫙 Hydrated Template
 
