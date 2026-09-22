@@ -6663,6 +6663,24 @@ export namespace proto {
             public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
+        interface IChatAnimatedWallpaper {
+            animatedWallpaperId?: (string|null);
+            dimLevel?: (number|null);
+        }
+
+        class ChatAnimatedWallpaper implements IChatAnimatedWallpaper {
+            constructor(p?: proto.Message.IChatAnimatedWallpaper);
+            public animatedWallpaperId?: (string|null);
+            public dimLevel?: (number|null);
+            public static create(properties?: proto.Message.IChatAnimatedWallpaper): proto.Message.ChatAnimatedWallpaper;
+            public static encode(m: proto.Message.IChatAnimatedWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatAnimatedWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatAnimatedWallpaper;
+            public static toObject(m: proto.Message.ChatAnimatedWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
         interface IChatThemeSetting {
             settingTimestampMs?: (number|Long|null);
             clearTheme?: (boolean|null);
@@ -6671,6 +6689,7 @@ export namespace proto {
             solidColor?: (proto.Message.IChatSolidColorWallpaper|null);
             stockImage?: (proto.Message.IChatStockImageWallpaper|null);
             customImage?: (proto.Message.IChatCustomImageWallpaper|null);
+            animatedWallpaper?: (proto.Message.IChatAnimatedWallpaper|null);
         }
 
         class ChatThemeSetting implements IChatThemeSetting {
@@ -6682,7 +6701,8 @@ export namespace proto {
             public solidColor?: (proto.Message.IChatSolidColorWallpaper|null);
             public stockImage?: (proto.Message.IChatStockImageWallpaper|null);
             public customImage?: (proto.Message.IChatCustomImageWallpaper|null);
-            public wallpaper?: ("defaultWallpaper"|"solidColor"|"stockImage"|"customImage");
+            public animatedWallpaper?: (proto.Message.IChatAnimatedWallpaper|null);
+            public wallpaper?: ("defaultWallpaper"|"solidColor"|"stockImage"|"customImage"|"animatedWallpaper");
             public static create(properties?: proto.Message.IChatThemeSetting): proto.Message.ChatThemeSetting;
             public static encode(m: proto.Message.IChatThemeSetting, w?: $protobuf.Writer): $protobuf.Writer;
             public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatThemeSetting;
