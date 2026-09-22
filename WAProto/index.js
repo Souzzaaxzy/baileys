@@ -48322,144 +48322,6 @@ export const proto = $root.proto = (() => {
             return ChatStockImageWallpaper;
         })();
 
-        Message.ChatAnimatedWallpaper = (function() {
-
-            function ChatAnimatedWallpaper(p) {
-                if (p)
-                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
-                        if (p[ks[i]] != null && ks[i] !== "__proto__")
-                            this[ks[i]] = p[ks[i]];
-            }
-
-            ChatAnimatedWallpaper.prototype.animatedWallpaperId = null;
-            ChatAnimatedWallpaper.prototype.dimLevel = null;
-
-            let $oneOfFields;
-
-            // Virtual OneOf for proto3 optional field
-            Object.defineProperty(ChatAnimatedWallpaper.prototype, "_animatedWallpaperId", {
-                get: $util.oneOfGetter($oneOfFields = ["animatedWallpaperId"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-
-            // Virtual OneOf for proto3 optional field
-            Object.defineProperty(ChatAnimatedWallpaper.prototype, "_dimLevel", {
-                get: $util.oneOfGetter($oneOfFields = ["dimLevel"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-
-            ChatAnimatedWallpaper.create = function create(properties) {
-                return new ChatAnimatedWallpaper(properties);
-            };
-
-            ChatAnimatedWallpaper.encode = function encode(m, w) {
-                if (!w)
-                    w = $Writer.create();
-                if (m.animatedWallpaperId != null && Object.hasOwnProperty.call(m, "animatedWallpaperId"))
-                    w.uint32(10).string(m.animatedWallpaperId);
-                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel"))
-                    w.uint32(21).float(m.dimLevel);
-                return w;
-            };
-
-            ChatAnimatedWallpaper.encodeDelimited = function encodeDelimited(m, w) {
-                return this.encode(m, w).ldelim();
-            };
-
-            ChatAnimatedWallpaper.decode = function decode(r, l, e, n) {
-                if (!(r instanceof $Reader))
-                    r = $Reader.create(r);
-                if (n === undefined)
-                    n = 0;
-                if (n > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatAnimatedWallpaper();
-                while (r.pos < c) {
-                    var t = r.uint32();
-                    if (t === e)
-                        break;
-                    switch (t >>> 3) {
-                    case 1: {
-                            m.animatedWallpaperId = r.string();
-                            break;
-                        }
-                    case 2: {
-                            m.dimLevel = r.float();
-                            break;
-                        }
-                    default:
-                        r.skipType(t & 7, n);
-                        break;
-                    }
-                }
-                return m;
-            };
-
-            ChatAnimatedWallpaper.decodeDelimited = function decodeDelimited(r) {
-                if (!(r instanceof $Reader))
-                    r = new $Reader(r);
-                return this.decode(r, r.uint32());
-            };
-
-            ChatAnimatedWallpaper.verify = function verify(m) {
-                if (typeof m !== "object" || m === null)
-                    return "object expected";
-                var properties = {};
-                if (m.animatedWallpaperId != null && m.hasOwnProperty("animatedWallpaperId")) {
-                    properties._animatedWallpaperId = 1;
-                    if (!$util.isString(m.animatedWallpaperId))
-                        return "animatedWallpaperId: string expected";
-                }
-                if (m.dimLevel != null && m.hasOwnProperty("dimLevel")) {
-                    properties._dimLevel = 1;
-                    if (typeof m.dimLevel !== "number")
-                        return "dimLevel: number expected";
-                }
-                return null;
-            };
-
-            ChatAnimatedWallpaper.fromObject = function fromObject(o) {
-                if (o instanceof $root.proto.Message.ChatAnimatedWallpaper)
-                    return o;
-                var m = new $root.proto.Message.ChatAnimatedWallpaper();
-                if (o.animatedWallpaperId != null)
-                    m.animatedWallpaperId = String(o.animatedWallpaperId);
-                if (o.dimLevel != null)
-                    m.dimLevel = Number(o.dimLevel);
-                return m;
-            };
-
-            ChatAnimatedWallpaper.toObject = function toObject(m, o) {
-                if (!o)
-                    o = {};
-                var d = {};
-                if (m.animatedWallpaperId != null && m.hasOwnProperty("animatedWallpaperId")) {
-                    d.animatedWallpaperId = m.animatedWallpaperId;
-                    if (o.oneofs)
-                        d._animatedWallpaperId = "animatedWallpaperId";
-                }
-                if (m.dimLevel != null && m.hasOwnProperty("dimLevel")) {
-                    d.dimLevel = o.defaults ? m.dimLevel : m.dimLevel;
-                    if (o.oneofs)
-                        d._dimLevel = "dimLevel";
-                }
-                return d;
-            };
-
-            ChatAnimatedWallpaper.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-
-            ChatAnimatedWallpaper.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/proto.Message.ChatAnimatedWallpaper";
-            };
-
-            return ChatAnimatedWallpaper;
-        })();
-
         Message.ChatThemeSetting = (function() {
 
             function ChatThemeSetting(p) {
@@ -48476,7 +48338,6 @@ export const proto = $root.proto = (() => {
             ChatThemeSetting.prototype.solidColor = null;
             ChatThemeSetting.prototype.stockImage = null;
             ChatThemeSetting.prototype.customImage = null;
-            ChatThemeSetting.prototype.animatedWallpaper = null;
 
             let $oneOfFields;
 
@@ -48499,7 +48360,7 @@ export const proto = $root.proto = (() => {
             });
 
             Object.defineProperty(ChatThemeSetting.prototype, "wallpaper", {
-                get: $util.oneOfGetter($oneOfFields = ["defaultWallpaper", "solidColor", "stockImage", "customImage", "animatedWallpaper"]),
+                get: $util.oneOfGetter($oneOfFields = ["defaultWallpaper", "solidColor", "stockImage", "customImage"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
 
@@ -48524,8 +48385,6 @@ export const proto = $root.proto = (() => {
                     $root.proto.Message.ChatStockImageWallpaper.encode(m.stockImage, w.uint32(98).fork()).ldelim();
                 if (m.customImage != null && Object.hasOwnProperty.call(m, "customImage"))
                     $root.proto.Message.ChatCustomImageWallpaper.encode(m.customImage, w.uint32(106).fork()).ldelim();
-                if (m.animatedWallpaper != null && Object.hasOwnProperty.call(m, "animatedWallpaper"))
-                    $root.proto.Message.ChatAnimatedWallpaper.encode(m.animatedWallpaper, w.uint32(114).fork()).ldelim();
                 return w;
             };
 
@@ -48568,10 +48427,6 @@ export const proto = $root.proto = (() => {
                         }
                     case 13: {
                             m.customImage = $root.proto.Message.ChatCustomImageWallpaper.decode(r, r.uint32(), undefined, n + 1);
-                            break;
-                        }
-                    case 14: {
-                            m.animatedWallpaper = $root.proto.Message.ChatAnimatedWallpaper.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     default:
@@ -48670,11 +48525,6 @@ export const proto = $root.proto = (() => {
                     d.customImage = $root.proto.Message.ChatCustomImageWallpaper.toObject(m.customImage, o);
                     if (o.oneofs)
                         d.wallpaper = "customImage";
-                }
-                if (m.animatedWallpaper != null && m.hasOwnProperty("animatedWallpaper")) {
-                    d.animatedWallpaper = $root.proto.Message.ChatAnimatedWallpaper.toObject(m.animatedWallpaper, o);
-                    if (o.oneofs)
-                        d.wallpaper = "animatedWallpaper";
                 }
                 return d;
             };
