@@ -99,6 +99,7 @@ desconhecido é diferença de versão, não bot.
 
 | Evidência | Categoria | Nível | Peso |
 |---|---|---|---|
+| `burst_density` | behavior | STRONG | 18 |
 | `regular_intervals` | behavior | STRONG | 18 |
 | `payload_similarity` | behavior | MEDIUM | 10 |
 | `repeating_sequence` | behavior | MEDIUM | 8 |
@@ -163,6 +164,26 @@ ela terminou. (Testes: *persistence appears after a full window*.)
 produz timestamps idênticos e o pacing fica invisível. A medição honesta é
 quando **este dispositivo recebeu** — `now()`. O `msgTs` declarado continua no
 relatório.
+
+### 4.4 Rajada x pacing — dois casos, duas evidências
+
+Um furo encontrado na prática: uma rajada **instantânea** (30 mensagens no mesmo
+milissegundo) fazia o analisador de intervalos ver **média 0 e variância 0** — e
+o resultado ficava mais baixo (NORMAL 14) do que um ritmo de 1s, que é *menos*
+artificial. O guard de variância baixa não podia distinguir "pacing de máquina"
+de "ausência de pacing".
+
+Hoje os dois casos têm evidência própria:
+
+| caso | evidência | por quê |
+|---|---|---|
+| gaps constantes (1s, 400ms…) | `regular_intervals` | há pacing |
+| tudo no mesmo instante | `burst_density` | **não** há pacing; é densidade |
+
+`regular_intervals` exige média ≥ 20ms (`BURST_TOLERANCE_MS`) — abaixo disso não
+é pacing, é rajada. `burst_density` conta a maior quantidade de mensagens dentro
+de uma janela deslizante de 2s; acima de 8 é fisicamente impossível digitar
+(4 msg/s sustentados, com payloads distintos).
 
 Complementos: `repeating_sequence` exige **≥2 tipos distintos** (senão todo
 humano que só manda texto "repete com período 1"); o digest **não** colapsa

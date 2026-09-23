@@ -119,6 +119,35 @@ describe('curva de deteccao (o que o operador deve esperar)', () => {
         assert.equal(r.actionAllowed, true, 'a acao e liberada so no modo active + confirmado');
     });
 
+    it('rajada INSTANTANEA (tudo no mesmo ms) e detectada como rajada', () => {
+        // Este era o furo: com todas as chegadas no mesmo instante, o analisador
+        // de intervalos via media 0 e variancia 0 e NAO reportava nada. Hoje a
+        // densidade da rajada e o que detecta esse caso.
+        const engine = makeEngine({ mode: ANTI_BOT_MODE.ACTIVE });
+        let r = null;
+        for (let i = 0; i < 30; i++) r = send(engine, { author: A, id: `I${i}`, tickMs: 0 });
+        assert.ok(r);
+        assert.ok(r.automationScore > 0, `a rajada instantanea deve pontuar (score ${r.automationScore})`);
+        assert.ok(r.evidences.some((e) => e.type === 'burst_density'),
+            `deve reportar burst_density (ev=${r.evidences.map((e) => e.type).join(',')})`);
+    });
+
+    it('rajada instantanea NAO e o mesmo que ritmo de maquina', () => {
+        // Os dois casos pontuam, mas por evidencias diferentes — se a rajada
+        // contasse como "regular_intervals", a explicacao estaria errada.
+        const burst = makeEngine({ mode: ANTI_BOT_MODE.ACTIVE });
+        let rb = null;
+        for (let i = 0; i < 30; i++) rb = send(burst, { author: A, id: `B${i}`, tickMs: 0 });
+        assert.ok(!rb.evidences.some((e) => e.type === 'regular_intervals'),
+            'rajada sem pacing nao pode ser "intervalos regulares"');
+
+        const paced = makeEngine({ mode: ANTI_BOT_MODE.ACTIVE });
+        let rp = null;
+        for (let i = 0; i < 30; i++) rp = send(paced, { author: A, id: `P${i}`, tickMs: 1000 });
+        assert.ok(rp.evidences.some((e) => e.type === 'regular_intervals'),
+            'ritmo constante e "intervalos regulares"');
+    });
+
     it('uso esparso (comandos espacados) NAO sobe de banda', () => {
         const engine = makeEngine({ mode: ANTI_BOT_MODE.ACTIVE });
         let r = null;

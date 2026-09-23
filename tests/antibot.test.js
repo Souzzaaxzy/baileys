@@ -324,17 +324,20 @@ describe('BOT traffic escalates but only confirms with corroboration', () => {
 
 describe('explicit non-signals never score', () => {
     it('a single unfamiliar structure is reported but weighs 0', () => {
-        const engine = createAntiBotEngine({ mode: ANTI_BOT_MODE.ACTIVE }, { now: () => 1_700_100_000_000 });
-        const out = [];
+        // Clock que avança com gaps IRREGULARES e largos: o pacing é medido por
+        // tempo de CHEGADA, e um clock congelado faria as 12 mensagens parecerem
+        // uma rajada — medindo outra coisa que não a estrutura.
+        const engine = pacedEngine({ gapMs: 2000, config: { mode: ANTI_BOT_MODE.ACTIVE } });
+        let r = null;
         for (let i = 0; i < 12; i++) {
-            out.push(msg({
-                text: `oi ${i}`,
+            r = engine.ingest(msg({
+                text: `mensagem sobre assunto ${i}`,
                 id: `S${i}`,
-                ts: 1_700_000_000 + Math.round((i * (1000 + i * 300)) / 1000),
+                ts: Math.floor(engine.__clock() / 1000),
                 over: { key: { addressingMode: 'lid' } }
             }));
+            engine.__tick(3000 + (i % 5) * 4000 + i * 900);
         }
-        const r = feed(engine, out);
         assert.ok(r);
         assert.equal(r.automationScore, 0, 'structure alone is not behaviour');
     });
