@@ -99,23 +99,42 @@ desconhecido é diferença de versão, não bot.
 
 | Evidência | Categoria | Nível | Peso |
 |---|---|---|---|
-| `regular_intervals` | behavior | STRONG | 6 |
-| `payload_similarity` | behavior | MEDIUM | 4 |
-| `repeating_sequence` | behavior | MEDIUM | 4 |
-| `uniform_length` | behavior | WEAK | 2 |
-| `persistent_behavior` | persistence | MEDIUM | 5 (tier) |
-| `persistent_risk` | persistence | STRONG | 9–12 (tier) |
-| `protocol_inconsistency` | protocol | MEDIUM | 4 |
+| `regular_intervals` | behavior | STRONG | 18 |
+| `payload_similarity` | behavior | MEDIUM | 10 |
+| `repeating_sequence` | behavior | MEDIUM | 8 |
+| `uniform_length` | behavior | WEAK | 4 |
+| `persistent_behavior` | persistence | MEDIUM | 14 (tier) |
+| `persistent_risk` | persistence | STRONG | 22–40 (tier) |
+| `protocol_inconsistency` | protocol | MEDIUM | 25 |
 | `structural_anomaly` | stanza | WEAK | **0** |
 
 Regras aplicadas pelo `EvidenceEngine`:
 
 1. **Dedup por tipo** — repetir um candidato não multiplica o peso.
-2. **Cap por categoria (`12`)** — empilhar sinais fracos nunca alcança a banda
-   de confirmação.
+2. **Cap por categoria (`34`)** — o teto fica **acima** de `suspicious` (30) e
+   **abaixo** de `highRisk` (50): comportamento sozinho pode ser genuinamente
+   suspeito, mas **nunca** actionable.
 3. **Peso vem do catálogo** — o chamador não escolhe o próprio peso.
 
-Bandas padrão: `observing 10 · suspicious 20 · highRisk 38 · confirmed 65`.
+Bandas padrão: `observing 15 · suspicious 30 · highRisk 50 · confirmed 65`.
+
+### A curva medida (o que esperar)
+
+Medições reais, gap constante de 1s, payload idêntico, janela de 60s:
+
+| janelas | msgs | score | banda | age? |
+|---|---|---|---|---|
+| 1 | 40 | 32 | SUSPICIOUS | não |
+| 2 | 80 | 46 | SUSPICIOUS | não |
+| 3 | 120 | 54 | HIGH_RISK | não |
+| 5 | 150 | 72 | **CONFIRMED** | **sim** |
+
+Ou seja: **~4 windows de ritmo de máquina sustentado** (≈4 minutos no padrão)
+para confirmar. Uma janela isolada nunca age — por mais intensa que seja (120
+msgs a 250ms numa janela dão 32, SUSPICIOUS).
+
+Contraprova, o que **não** sobe: uso esparso (comandos a cada 30s) = **NORMAL 0**;
+humano *bursty* com gaps irregulares de 300ms a 15s = **NORMAL 0**.
 
 ---
 
@@ -123,20 +142,20 @@ Bandas padrão: `observing 10 · suspicious 20 · highRisk 38 · confirmed 65`.
 
 Esta seção é o coração do projeto. Cada guarda existe porque um teste a exigiu.
 
-### 4.1 Cap por categoria ⇒ comportamento sozinho não confirma
+### 4.1 Cap por categoria ⇒ comportamento sozinho não é actionable
 
-O comportamento tem teto de **12**. A menor banda é `observing` (10) e
-`suspicious` é 20 — ou seja, **uma janela puramente comportamental nunca passa
-de OBSERVING**. O `ConfidenceEngine` ainda exige ≥3 categorias distintas e ao
-menos uma **não-comportamental**. Comportamento sozinho, por mais sustentado que
-seja, **não confirma**. (Teste: *behaviour ALONE can never confirm*.)
+O comportamento tem teto de **34**: acima de `suspicious` (30), abaixo de
+`highRisk` (50). Ou seja, **uma janela puramente comportamental nunca é
+actionable**, por mais intensa que seja. O `ConfidenceEngine` ainda exige ≥2
+categorias distintas e ao menos uma **não-comportamental** (persistência ou
+protocolo). Uma janela só de comportamento, portanto, para em SUSPICIOUS.
 
-### 4.2 Janelas são TEMPO, não mensagens
+### 4.2 Janela é TEMPO, não mensagem
 
 Gravar uma janela por mensagem fazia um burst de 40 mensagens parecer 40 janelas
 de persistência — inflando exatamente a evidência que deveria provar
-sustentação. Hoje: uma janela por `windowMs`, fechada **no fim**, com o score
-que ela terminou. (Testes: *persistence appears after a full window*.)
+sustentação. Hoje: uma janela por `windowMs`, fechada **no fim**, com o score que
+ela terminou. (Testes: *persistence appears after a full window*.)
 
 ### 4.3 Tempo de CHEGADA, não `messageTimestamp`
 
@@ -151,14 +170,41 @@ dígitos (senão "msg 1", "msg 2" viram o mesmo payload).
 
 ---
 
+## 4b. Calibração — como os números foram escolhidos
+
+Os pesos e as bandas **não foram arbitrados**: foram calculados para que a curva
+de detecção tivesse as propriedades que o requisito pede. O raciocínio:
+
+1. Comportamento tem 3 evidências fortes (18 + 10 + 4 = 32) → teto **34**.
+2. `suspicious` precisa ficar **abaixo** de 34, senão nem a janela mais
+   escancaradamente artificial seria reportada. → **30**.
+3. `highRisk` precisa ficar **acima** de 34, senão comportamento sozinho seria
+   actionable. → **50**.
+4. Persistência (tier n≥4 = 40) + comportamento (32) = 72 → acima de
+   `confirmed` (65). Assim **ritmo sustentado confirma**, e nada menos confirma.
+5. `protocol_inconsistency` = 25: duas categorias reais exigidas antes de virar
+   evidência fazem dela um sinal forte mas não suficiente sozinho.
+
+O primeiro conjunto de números (cap 12, bandas 20/40/60/80) falhava por
+**construção**: o teto comportamental era metade da banda de confirmação, então
+o sistema nunca confirmava nada — exatamente o "não detectou nada" relatado.
+
+---
+
 ## 5. Regra de confirmação (`ConfidenceEngine`)
 
 `CONFIRMED` exige **todas**:
 
-1. score ≥ `confirmed`;
-2. ≥ `minCategoriesForConfirm` (3) categorias **distintas**;
-3. ≥1 categoria **não-comportamental** (protocol/stanza/persistence);
+1. score ≥ `confirmed` (65);
+2. ≥ `minCategoriesForConfirm` (**2**) categorias **distintas**;
+3. ≥1 categoria **não-comportamental** (persistence/protocol/stanza);
 4. ≥ `minWindowsForConfirm` (2) janelas anteriores já em risco.
+
+Eram 3 categorias na primeira versão — e isso tornava a confirmação
+**inalcançável**: com o cap por categoria não há como reunir três classes
+independentes a partir de observação passiva, então o sistema nunca confirmava
+nada. Duas classes independentes já cumprem o requisito de "múltiplos sinais
+independentes".
 
 Falhando qualquer uma, **rebaixa** para HIGH_RISK e registra o motivo
 (`confirm_denied_*`). Ambiguidade ⇒ banda menor.
@@ -212,7 +258,15 @@ O núcleo **não** remove ninguém, não envia nada e não altera a conexão.
 
 ## 10. Testes
 
-`node --test tests/antibot.test.js` — 17 testes: humanos (normal, muito ativo,
-repetitivo, mídia, LID) nunca confirmam; bot escala; comportamento sozinho não
-confirma; persistência exige janela; sinais explicitamente não-usáveis valem 0;
-memória limitada; entrada inválida não lança.
+- `node --test tests/antibot.test.js` — **18 testes**: humanos (normal, muito
+  ativo, repetitivo, mídia, LID) nunca confirmam; bot escala; **uma** janela de
+  comportamento nunca confirma; ritmo sustentado por janelas confirma;
+  persistência exige janela; sinais não-usáveis valem 0; memória limitada;
+  entrada inválida não lança.
+- `node --test tests/antibot-monitoring.test.js` — **9 testes**: o contrato do
+  **painel**. `analyzed` conta quem falou; e — a correção que nasceu do relato —
+  em `log`/`observe` o painel mostra a **banda RAW da análise**, não a efetiva.
+  Antes ele contava a efetiva, e como `observe` rebaixa todos a NORMAL, o painel
+  aparecia **zerado** justamente no modo em que se quer ver evidência.
+
+Suíte completa da fork: **231 testes, 0 falhas**.

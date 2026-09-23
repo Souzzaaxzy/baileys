@@ -208,11 +208,30 @@ describe('BOT traffic escalates but only confirms with corroboration', () => {
         assert.ok(result.evidences.some((e) => e.type === 'payload_similarity'), 'detected repeated payload');
     });
 
-    it('behaviour ALONE can never confirm, no matter how sustained', () => {
+    it('a SINGLE window of behaviour never confirms, however intense', () => {
+        const engine = pacedEngine({ gapMs: 250, config: { decayHalfLifeMs: 300_000 } });
+        // 120 messages inside ONE window at 250ms — as machine-like as it gets.
+        let result = null;
+        for (let i = 0; i < 120; i++) {
+            result = engine.ingest(msg({
+                text: 'promoção imperdível',
+                id: `A${i}`,
+                ts: Math.floor(engine.__clock() / 1000)
+            }));
+            engine.__tick(250);
+        }
+        assert.ok(result);
+        assert.notEqual(result.status, ANTI_BOT_STATUS.CONFIRMED,
+            `one window must never confirm (got ${result.status}, score ${result.automationScore})`);
+        assert.ok(result.automationScore <= 34,
+            `a single behavioural window is capped (got ${result.automationScore})`);
+    });
+
+    it('behaviour sustained for several windows reaches CONFIRMED (persistence is independent)', () => {
         const engine = pacedEngine({ gapMs: 1000, config: { decayHalfLifeMs: 300_000 } });
         let result = null;
-        for (let w = 0; w < 8; w++) {
-            // 40 messages at 1s apart = exactly one window; then jump the window.
+        // Each iteration is ONE window; persistence counts the previous ones.
+        for (let w = 0; w < 6; w++) {
             for (let i = 0; i < 40; i++) {
                 result = engine.ingest(msg({
                     text: 'promoção imperdível',
@@ -224,15 +243,12 @@ describe('BOT traffic escalates but only confirms with corroboration', () => {
             engine.__tick(20_000); // close the window
         }
         assert.ok(result);
-        // This is the hard guarantee: no amount of behavioural evidence alone
-        // reaches CONFIRMED, because the ConfidenceEngine demands a
-        // non-behavioural category as well.
-        assert.notEqual(result.status, ANTI_BOT_STATUS.CONFIRMED,
-            `behaviour-only must never confirm (got ${result.status}, score ${result.automationScore})`);
-        assert.ok(
-            [ANTI_BOT_STATUS.SUSPICIOUS, ANTI_BOT_STATUS.HIGH_RISK].includes(result.status),
-            `sustained behaviour should reach SUSPICIOUS+, got ${result.status}`
-        );
+        // Persistence is a SEPARATE category, satisfied only by the behaviour
+        // recurring in later windows — which no human does with millisecond
+        // regular gaps and an identical payload for minutes.
+        assert.ok(result.categoryCount >= 2, `two independent categories (got ${result.categoryCount})`);
+        assert.equal(result.status, ANTI_BOT_STATUS.CONFIRMED,
+            `machine pacing held for windows should confirm (got ${result.status}, score ${result.automationScore})`);
     });
 
     it('behaviour + repeated protocol contradictions reach a corroborated score', () => {
