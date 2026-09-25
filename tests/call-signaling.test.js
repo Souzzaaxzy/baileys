@@ -129,23 +129,93 @@ describe('group_info roster', () => {
 });
 
 describe('buildRoster', () => {
-    it('groups devices per user and encodes device 0 as a bare jid', () => {
+    it('uses the BARE jid on <user> and the device jid on <device>', () => {
+        // Captured shape: <user jid="156535032389744@lid"> with
+        // <device jid="156535032389744:14@lid">. The qualified jid belongs on the
+        // device, never on the user.
         const roster = buildRoster(
             ['b@s.whatsapp.net'],
             [
                 { user: 'b', server: 's.whatsapp.net', device: 0 },
                 { user: 'b', server: 's.whatsapp.net', device: 2 }
             ],
-            'me@lid'
+            'me:14@lid'
         );
         const b = roster.find((r) => r.jid === 'b@s.whatsapp.net');
+        assert.ok(b, 'user key is bare');
         assert.deepEqual(b.devices.map((d) => d.jid), ['b@s.whatsapp.net', 'b:2@s.whatsapp.net']);
-        assert.ok(roster.some((r) => r.jid === 'me@lid'));
+
+        const self = roster.find((r) => r.jid === 'me@lid');
+        assert.ok(self, 'self is bare on the user key');
+        assert.deepEqual(self.devices.map((d) => d.jid), ['me:14@lid'], 'self device keeps its device');
+        assert.equal(roster[0].jid, 'me@lid', 'creator is listed first');
     });
 
     it('adds an entry for a requested account with no device data', () => {
         const roster = buildRoster(['x@s.whatsapp.net'], [], 'me@lid');
         assert.ok(roster.some((r) => r.jid === 'x@s.whatsapp.net'));
+    });
+});
+
+describe('captured initial group offer shape', () => {
+    // Reproduces the authoritative initial-group-call capture, so a regression in
+    // any of these fields fails here instead of in production.
+    const node = buildGroupOffer({
+        callId: '00DD63A26643DC3496FCBD161E6E2AB1',
+        callCreator: '156535032389744:14@lid',
+        groupJid: null,
+        participants: buildRoster(
+            ['242653052539031@lid', '74170125783269@lid'],
+            [
+                { user: '156535032389744', server: 'lid', device: 14 },
+                { user: '242653052539031', server: 'lid', device: 0 },
+                { user: '242653052539031', server: 'lid', device: 1 },
+                { user: '74170125783269', server: 'lid', device: 0 }
+            ],
+            '156535032389744:14@lid'
+        ),
+        stanzaId: '20350.27209-809'
+    });
+
+    it('is addressed to the call object and carries call-id/call-creator', () => {
+        assert.equal(node.attrs.to, '00DD63A26643DC3496FCBD161E6E2AB1@call');
+        const offer = child(node, 'offer');
+        assert.equal(offer.attrs['call-id'], '00DD63A26643DC3496FCBD161E6E2AB1');
+        assert.equal(offer.attrs['call-creator'], '156535032389744:14@lid');
+    });
+
+    it('has no group-jid on an ad-hoc call', () => {
+        assert.equal('group-jid' in child(node, 'offer').attrs, false);
+    });
+
+    it('orders children exactly as captured', () => {
+        assert.deepEqual(tags(child(node, 'offer')), ['audio', 'audio', 'net', 'group_info']);
+        assert.equal(child(node, 'offer').content[0].attrs.rate, '8000');
+        assert.equal(child(node, 'offer').content[1].attrs.rate, '16000');
+        assert.equal(child(node, 'offer').content[2].attrs.medium, '3');
+    });
+
+    it('lists bare user jids with device-qualified children', () => {
+        const groupInfo = child(child(node, 'offer'), 'group_info');
+        assert.deepEqual(groupInfo.content.map((u) => u.attrs.jid), [
+            '156535032389744@lid',
+            '242653052539031@lid',
+            '74170125783269@lid'
+        ]);
+        const first = groupInfo.content[0];
+        assert.deepEqual(first.content.map((d) => d.attrs.jid), ['156535032389744:14@lid']);
+    });
+
+    it('puts capability only on the creator device', () => {
+        const groupInfo = child(child(node, 'offer'), 'group_info');
+        const creatorCap = groupInfo.content[0].content[0].content[0];
+        assert.equal(creatorCap.tag, 'capability');
+        assert.equal(creatorCap.attrs.ver, '1');
+        for (const user of groupInfo.content.slice(1)) {
+            for (const device of user.content) {
+                assert.equal(device.content.length, 0, `${device.attrs.jid} must have no capability`);
+            }
+        }
     });
 });
 

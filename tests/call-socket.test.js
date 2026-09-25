@@ -129,7 +129,7 @@ DEVICE_INDEX[ME.split('@')[0]] = [0];
  * Build a socket with a fake WebSocket that records every frame, answers `query`
  * with a `<ack>` carrying the same stanza id, and serves device queries locally.
  */
-const makeSock = async () => {
+const makeSock = async ({ ackCall = true } = {}) => {
     const creds = initAuthCreds();
     creds.me = { id: ME, lid: ME_LID, name: 'test' };
     const keys = makeKeys();
@@ -153,7 +153,7 @@ const makeSock = async () => {
                         return;
                     }
                     // The server acks every `<call>` with a matching id.
-                    if (node.tag === 'call') {
+                    if (node.tag === 'call' && ackCall) {
                         client.emit(`TAG:${node.attrs.id}`, {
                             tag: 'ack',
                             attrs: { id: node.attrs.id, class: 'call', from: 's.whatsapp.net' }
@@ -266,6 +266,17 @@ describe('socket call methods', () => {
     it('rejects a non-group JID', async () => {
         const { sock } = await makeSock();
         await assert.rejects(() => sock.offerGroupCall('5511900000002@s.whatsapp.net'), /group JID/);
+    });
+
+    it('FAILS when the server does not ack (silence is not success)', async () => {
+        // The socket layer turns a query timeout into `undefined` (or lets the
+        // outer timeout throw); either way it must NOT be read as success. If it
+        // were, the caller would report a placed call while nothing rings.
+        const { sock } = await makeSock({ ackCall: false });
+        await assert.rejects(
+            () => sock.offerGroupCall(GROUP, PEERS.map((p) => p.lid), { timeoutMs: 1500 }),
+            /not acknowledged|Timed Out|timed out/i
+        );
     });
 
     it('terminateCall sends a <call><terminate>', async () => {
