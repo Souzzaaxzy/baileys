@@ -7,6 +7,29 @@ export function makeMessagesRecvSocket(config: any): {
      * Not an acceptance, and no media is carried.
      */
     preacceptCall: (callId: any, callFrom: any) => Promise<void>;
+    /**
+     * Places a 1:1 call (signaling only — no media is carried). Resolves with the
+     * server ack. Returns `{ id, to, stanzaId }`.
+     */
+    offerCall: (toJid: string, options?: any) => Promise<{
+        id: string;
+        to: string;
+        stanzaId: string;
+    }>;
+    /**
+     * Places a group call (signaling only). Resolves with the server ack.
+     * Returns `{ id, groupJid, stanzaId, participants }`.
+     */
+    offerGroupCall: (groupJid: string, jids?: string[], options?: any) => Promise<{
+        id: string;
+        groupJid: string;
+        stanzaId: string;
+        participants: number;
+    }>;
+    /** Ends a call. */
+    terminateCall: (callId: string, options?: any) => Promise<{
+        id: string;
+    }>;
     fetchMessageHistory: (count: any, oldestMsgKey: any, oldestMsgTimestamp: any) => Promise<any>;
     requestPlaceholderResend: (messageKey: any, msgData: any) => Promise<any>;
     messageRetryManager: import("../Utils/message-retry-manager.js").MessageRetryManager | null;
