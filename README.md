@@ -86,6 +86,7 @@ This fork designed for production use with a focus on clarity and safety:
 - [🌐 Connect to WhatsApp (Quick Step)](#-connect-to-whatsapp-quick-step)
    - [🔐 Auth State](#-auth-state)
 - [🗄️ Implementing Data Store](#%EF%B8%8F-implementing-data-store)
+   - [🧑 Contact names](#-contact-names-sockcontactsgetname)
 - [🪪 WhatsApp IDs Explain](#-whatsapp-ids-explain)
 - [✉️ Sending Messages](#%EF%B8%8F-sending-messages)
    - [🔠 Text](#-text)
@@ -367,6 +368,45 @@ const connectToWhatsApp = async () => {
 }
 
 connectToWhatsApp()
+```
+
+#### 🧑 Contact names (`sock.contacts.getName`)
+
+The lib emits `contacts.upsert` / `contacts.update` but used to keep nothing, so
+there was **no way to ask for a contact's name** — commands that name people
+ended up showing the raw number or LID. Now the socket caches contacts and
+resolves a display name.
+
+```javascript
+// after connecting
+sock.contacts.getName('5511999999999@s.whatsapp.net') // 'Fulano de Tal' | undefined
+sock.contacts.getName('123456789012345@lid')          // resolves LID ↔ PN aliases
+sock.getName('5511999999999')                         // shorthand (also accepts getName(chat, jid))
+
+const c = sock.contacts.getContact(jid) // { id, name, notify, verifiedName, username, lid, phoneNumber }
+sock.contacts.getAll()                  // all known contacts
+sock.contacts.upsert({ id, name })       // feed it manually if you like
+sock.contacts.remove(jid)               // forget one
+sock.contacts.clear()                   // forget everything
+```
+
+Resolution order: **`name`** (address book) → **`notify`** (observed pushName) →
+**`verifiedName`** (business) → **`username`** (`@handle`). Generic values
+(`Usuário`, `user`, …), bare phone numbers and raw JIDs are **rejected**, so the
+return is `undefined` when there is no trustworthy name — the caller decides the
+fallback. A record that carries both `lid` and `phoneNumber` is stored under
+**both** aliases, so looking up by either one finds the same name. Partial
+updates (e.g. a picture change) do **not** erase the name already known.
+
+Bound options: `max` (default 5000 records) and `ttlMs` (default 7 days). It is
+in-memory only — for persistence, feed `sock.contacts.upsert(...)` from your own
+store, or use the event emitter directly:
+
+```javascript
+import { makeContactStore } from '@souzzaaxzy/baileys'
+
+const contacts = makeContactStore({ ev: sock.ev, max: 10000, ttlMs: 0 })
+contacts.getName(jid)
 ```
 
 ### 🪪 WhatsApp IDs Explain
