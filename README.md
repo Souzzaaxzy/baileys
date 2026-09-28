@@ -160,6 +160,8 @@ This fork designed for production use with a focus on clarity and safety:
    - [📱 Standalone client (1:1 calls)](#-standalone-client-11-calls)
    - [🧠 Memory & workers](#-memory--workers)
    - [🐢 "Stuck on connecting"](#-stuck-on-connecting)
+   - [🔊 Keeping the call up (and the music playing)](#-keeping-the-call-up-and-the-music-playing)
+   - [🎭 The right identity (voice-capable)](#-the-right-identity-voice-capable)
 - [🚀 Try the Bot](#-try-the-bot)
 - [📦 Fork Base](#-fork-base)
 - [📣 Credits](#-credits)
@@ -2658,6 +2660,60 @@ node tests/voip-engine-boot.test.js     # initialize() resolves, with real memor
 node tests/voip-worker-timeout.test.js  # every worker times out → still settles, and reports it
 node tests/voip-session.test.js         # lazy facade + memory pre-flight
 ```
+
+#### 🔊 Keeping the call up (and the music playing)
+
+A call that goes quiet does not stay up. Two behaviours matter once a file ends:
+
+- **Keep-alive (default on).** When the source plays out, the feeder keeps
+  emitting **silence** instead of stopping. A dead RTP stream is what makes the
+  relay treat the leg as idle and drop it — the *"the call does not hold"*
+  symptom. This mirrors what Meta's own integration examples do (inject a silent
+  stream so the media path stays established).
+- **Loop (opt-in).** `{ loop: true }` replays the file, so music keeps playing
+  instead of stopping after one pass.
+
+```js
+await voip.tocarAudio(grupo, './song.mp3')                  // plays once, then silence
+await voip.tocarAudio(grupo, './song.mp3', { loop: true })  // repeats until you stop it
+await voip.tocarAudio(grupo, './song.mp3', { keepAlive: false }) // stop the stream when done
+await voip.pararAudio(grupo)                                // stop audio, keep the call
+```
+
+> [!NOTE]
+> `stop()` is final — a looping feeder does not resurrect itself. This was a real
+> bug found by the test (`stop()` still flushed a few buffered chunks after
+> being called), fixed and locked in `tests/voip-audio-continuity.test.js`.
+
+```bash
+node tests/voip-audio-continuity.test.js  # keep-alive, loop, and stop()
+node tests/voip-signaling-dispose.test.js # teardown does not leak socket hooks
+node tests/voip-voice-identity.test.js    # the UWP + 5-part build-id identity
+```
+
+#### 🎭 The right identity (voice-capable)
+
+The package default (`Browsers.macOS('Chrome')`, 3-part version) is **not**
+voice-capable. Use the preset:
+
+```js
+import { Browsers } from '@souzzaaxzy/baileys'
+
+const { browser, version } = Browsers.voiceCapable('UWP')
+const sock = makeWASocket({ auth: state, browser, version, markOnlineOnConnect: false })
+```
+
+And assert it, so the mistake is never silent:
+
+```js
+import { isVoiceCapableConfig } from '@souzzaaxzy/baileys'
+
+const check = isVoiceCapableConfig(config)
+// { ok: false, reason: 'browser "Chrome" nao e UWP/DESKTOP — o WhatsApp nao habilita a midia da call (voz fica muda)' }
+```
+
+`VOICE_CAPABLE_VERSION` (the pinned 5-part build id) is exported too, if you
+need to reference it directly.
 
 ### 🚀 Try the Bot
 
