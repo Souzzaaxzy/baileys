@@ -155,6 +155,11 @@ This fork designed for production use with a focus on clarity and safety:
    - [🛒 Business Management](#-business-management)
    - [🔐 Privacy Management](#-privacy-management)
    - [📡 Events](#-events)
+- [📞 Voice & Video Calls (VoIP media)](#-voice--video-calls-voip-media)
+   - [🔌 Socket session (group calls)](#-socket-session-group-calls)
+   - [📱 Standalone client (1:1 calls)](#-standalone-client-11-calls)
+   - [🧠 Memory & workers](#-memory--workers)
+   - [🐢 "Stuck on connecting"](#-stuck-on-connecting)
 - [🚀 Try the Bot](#-try-the-bot)
 - [📦 Fork Base](#-fork-base)
 - [📣 Credits](#-credits)
@@ -2542,6 +2547,116 @@ sock.ev.on('newsletter.view', (update) => {})
 sock.ev.on('newsletter-participants.update', (update) => {})
 sock.ev.on('newsletter-settings.update', (update) => {})
 sock.ev.on('settings.update', (update) => {})
+```
+
+### 📞 Voice & Video Calls (VoIP media)
+
+Two layers live in this package, and it is worth knowing which is which:
+
+| Layer | Where | What it does |
+|---|---|---|
+| **Signaling** | `offerCall` / `offerGroupCall` / `terminateCall` / `rejectCall` | Builds the `<call>` stanzas. The call *exists* — it rings, can be answered, can be ended. **Carries no sound.** |
+| **Media** | `Voip` (this section) | The WASM VoIP engine, the relay transport and the audio pipeline. **This is what puts audio on the wire.** |
+
+Signaling alone is not a working call: media is RTP/SRTP over UDP to a relay, with keys negotiated separately and Opus encoding driven by WhatsApp Web's own engine. The media stack is ported from [`lizzy-call`](https://github.com/Souzzaaxzy/lizzy-call) (itself a fork of [baileys-caller](https://github.com/SheIITear/baileys-caller) by ShellTear, MIT), with group support and a fix for the Linux worker hang (see below).
+
+> [!IMPORTANT]
+> **Calls need a desktop/UWP identity.** WhatsApp only enables the media stack for clients that advertise themselves as desktop/UWP — a plain Chrome identity gets signaling but no voice. This fork already does the right thing in `Utils/validate-connection.js` (`getPlatformType` maps `UWP`/`DESKTOP`), so set the browser preset accordingly:
+>
+> ```js
+> const sock = makeWASocket({
+>   auth: state,
+>   browser: Browsers.windows('UWP'),
+>   markOnlineOnConnect: false,
+> })
+> ```
+
+#### 🔌 Socket session (group calls)
+
+Rides the socket you already have — no extra device, no second login:
+
+```js
+import { Voip } from '@souzzaaxzy/baileys'
+
+const voip = Voip.makeVoipSession(sock, { log: console.log })
+
+// pre-flight: refuse a call that would be OOM-killed instead of dying silently
+console.log(voip.checkMemory()) // { ok, livreMb, minFreeMb }
+
+// join the group call as a media participant
+await voip.entrarNaCall({
+  grupo: '123456789-123456@g.us',
+  participantes: ['5511...@s.whatsapp.net'],
+})
+
+// play a file into the call (ffmpeg → 16 kHz mono PCM → engine uplink)
+await voip.tocarAudio('123456789-123456@g.us', './song.mp3')
+await voip.pararAudio('123456789-123456@g.us')
+
+// leave and release the media stack
+await voip.sairDaCall('123456789-123456@g.us')
+```
+
+The facade is **lazy**: nothing is allocated until the first call, so a bot that never calls pays none of the memory cost.
+
+Lower-level pieces are exported too, if you need them directly:
+
+```js
+import { Voip } from '@souzzaaxzy/baileys'
+
+new Voip.GroupCallMedia({ log })
+new Voip.WasmEngine({ resourcesPath: Voip.VOIP_PACKAGE_ROOT, callbacks: { /* ... */ } })
+new Voip.SignalingBridge({ sock })
+new Voip.RelayRtcTransport({ /* ... */ })
+```
+
+#### 📱 Standalone client (1:1 calls)
+
+For a call fully decoupled from the bot — its own auth dir, its own QR:
+
+```js
+import { Voip } from '@souzzaaxzy/baileys'
+
+const client = new Voip.VoipClient({ authDir: './call-auth' })
+await client.connect()
+
+const call = await client.call('5511999999999', {
+  audioSource: './hello.mp3', // or "silence"
+  durationMs: 120_000,
+})
+
+call.on('connected', () => console.log('media flowing'))
+call.on('ended', (reason) => console.log('ended:', reason))
+```
+
+`VoipClient` extends `EventEmitter` and emits `ringing`, `connected`, `audio` (16 kHz mono PCM frames), `ended` and `error`.
+
+#### 🧠 Memory & workers
+
+The media stack is the heaviest thing in the package. Measured: **~45 MB per pthread worker**, and a single call holds a pool of them — the SDK's original default of 20 workers came to **~900 MB for one call**, which on a small VPS ends in the OOM killer sending `SIGKILL`. That surfaces as *"the bot restarted by itself"*, with no log, because `SIGKILL` cannot be caught.
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `CALL_PTHREAD_POOL_SIZE` | `6` | Prewarmed WASM workers. Lower = less RAM, less headroom. |
+| `CALL_WORKER_LOAD_TIMEOUT_MS` | `20000` | How long to wait for each worker to report `loaded` before discarding it. |
+
+```js
+Voip.checkVoipMemory() // { ok, livreMb, minFreeMb } — refuse before you OOM
+Voip.VOIP_MIN_FREE_MB  // 700
+```
+
+#### 🐢 "Stuck on connecting"
+
+The classic failure — *the call goes up, sits on "connecting" for ~50 s, then the process dies* — has a specific cause, measured on Linux in [baileys-caller issue #1](https://github.com/SheIITear/baileys-caller/issues/1): **19 of 20 prewarmed workers report `loaded`, one never does.** A bare `Promise.all` over those promises then never resolves, so the engine never finishes initializing and the media never becomes ready.
+
+This port does not use a bare `Promise.all`. Each worker gets its own timeout; the ones that load join the pool, the ones that hang are discarded (and terminated, so they do not hold memory) and the reason is logged. `initialize()` always settles — degraded is better than hung.
+
+Regression tests for exactly this:
+
+```bash
+node tests/voip-engine-boot.test.js     # initialize() resolves, with real memory numbers
+node tests/voip-worker-timeout.test.js  # every worker times out → still settles, and reports it
+node tests/voip-session.test.js         # lazy facade + memory pre-flight
 ```
 
 ### 🚀 Try the Bot

@@ -1,7 +1,7 @@
 {
    "name": "@souzzaaxzy/baileys",
    "version": "0.3.18-final",
-   "description": "Enhanced Baileys v7 with fixes for newsletter media uploads, plus support for interactive messages, albums, and additional message types.",
+   "description": "Enhanced Baileys v7 with fixes for newsletter media uploads, plus support for interactive messages, albums, additional message types, and VoIP voice/video call media (WASM).",
    "main": "lib/index.js",
    "types": "lib/index.d.ts",
    "type": "module",
@@ -19,7 +19,8 @@
    "files": [
       "lib/**/*",
       "WAProto/**/*",
-      "engine-requirements.js"
+      "engine-requirements.js",
+      "assets/**/*"
    ],
    "keywords": [
       "automation",
@@ -40,6 +41,7 @@
       "@adiwajshing/keyed-db": "^0.2.4",
       "@cacheable/node-cache": "^1.4.0",
       "@hapi/boom": "^9.1.3",
+      "@roamhq/wrtc": "^0.10.0",
       "async-mutex": "^0.5.0",
       "fflate": "^0.8.2",
       "libsignal": "^6.0.0",
