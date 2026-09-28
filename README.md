@@ -87,6 +87,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🔐 Auth State](#-auth-state)
 - [🗄️ Implementing Data Store](#%EF%B8%8F-implementing-data-store)
    - [🧑 Contact names](#-contact-names-sockcontactsgetname)
+   - [🎞️ Sticker → GIF/MP4](#%EF%B8%8F-sticker--gifmp4)
 - [🪪 WhatsApp IDs Explain](#-whatsapp-ids-explain)
 - [✉️ Sending Messages](#%EF%B8%8F-sending-messages)
    - [🔠 Text](#-text)
@@ -408,6 +409,44 @@ import { makeContactStore } from '@souzzaaxzy/baileys'
 const contacts = makeContactStore({ ev: sock.ev, max: 10000, ttlMs: 0 })
 contacts.getName(jid)
 ```
+
+#### 🎞️ Sticker → GIF/MP4
+
+Convert an animated sticker (WebP) into a playable GIF or MP4.
+
+> The FFmpeg WebP decoder **skips** the `ANIM`/`ANMF` chunks and yields 0 frames,
+> so FFmpeg alone cannot convert an animated sticker. This helper uses **`sharp`**
+> (libvips) to read the frames.
+
+```javascript
+import { stickerToGif, stickerToMp4, convertSticker, isAnimatedWebP } from '@souzzaaxzy/baileys'
+
+// webpBuffer: the decrypted sticker (downloadContentFromMessage / getFileBuffer)
+if (isAnimatedWebP(webpBuffer)) {
+   const gif = await stickerToGif(webpBuffer)          // { buffer, mime:'image/gif', ext, pages, fps }
+   const mp4 = await stickerToMp4(webpBuffer)          // { buffer, mime:'video/mp4', ... }
+
+   await sock.sendMessage(jid, { video: mp4.buffer, gifPlayback: true })
+   await sock.sendMessage(jid, { document: gif.buffer, mimetype: 'image/gif', fileName: 'sticker.gif' })
+}
+
+// Or by name:
+const out = await convertSticker(webpBuffer, 'mp4')    // 'gif' | 'mp4' | 'video'
+```
+
+Options: `fps` (1–50), `width` (resize), `maxFrames` (default 600), `loop` (GIF,
+0 = forever), `crf` (MP4, default 23), `timeoutMs` (MP4, default 60s),
+`ffmpegPath` (defaults to `process.env.FFMPEG_PATH || 'ffmpeg'`).
+
+Requirements:
+- **`sharp`** — mandatory (reads the frames). It is a **peer dependency** and is
+  **not** auto-installed by `--legacy-peer-deps`, so add it explicitly:
+  `npm i sharp`.
+- **FFmpeg** — only for the **MP4** path (the GIF is written by `sharp`, no FFmpeg).
+
+The MP4 is written to a temp file first because the MP4 muxer requires a
+**seekable** output (`pipe:1` fails with *"muxer does not support non seekable
+output"*); the temp dir is always removed.
 
 ### 🪪 WhatsApp IDs Explain
 
