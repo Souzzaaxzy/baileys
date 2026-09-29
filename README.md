@@ -132,6 +132,7 @@ This fork designed for production use with a focus on clarity and safety:
    - [🕒 Ephemeral](#-ephemeral)
    - [📰 External Ad Reply](#-external-ad-reply)
    - [🧑‍🧑‍🧒 Group Status](#%E2%80%8D%E2%80%8D-group-status)
+   - [📣 Follow Channel Invite](#-follow-channel-invite)
    - [🔁 Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - [👥 Members-only group message](#members-only-group-message)
    - [🔐 Per-message Sender Key rotation](#-per-message-sender-key-rotation-relaygroupmessagewithsenderkeyrotation)
@@ -669,6 +670,43 @@ sock.sendMessage(jid, {
    quoted: message
 })
 ```
+
+#### 📣 Follow Channel Invite
+
+Send the native **"follow channel"** card
+(`newsletterFollowerInviteMessageV2`) — the one WhatsApp shows for a
+newsletter/channel with its picture and name.
+
+Before this, the type existed only in the proto: `generateWAMessageContent`
+didn't know it and fell into `prepareWAMessageMedia`, which threw
+`Invalid media type`. The only way out was the `raw: true` passthrough.
+
+```javascript
+await sock.sendMessage(jid, {
+   newsletterInvite: {
+      jid: '120363410980452460@newsletter',
+      name: 'My Channel',
+      text: 'Follow our channel for updates!', // optional caption
+      thumbnail: jpegBuffer,                    // optional (see below)
+   },
+   // optional: the "View channel" header on the message itself
+   contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+         newsletterJid: '120363410980452460@newsletter',
+         newsletterName: 'My Channel',
+      },
+   },
+}, { quoted: message })
+```
+
+**Thumbnail** — pass `thumbnail` with the picture bytes. If you omit it, the
+library tries `getProfilePicUrl` (a `MessageGenerationOptions` hook) and
+downloads that URL. Failures there are swallowed on purpose: the card is sent
+**without** the picture rather than failing.
+
+The `raw: true` form keeps working, for anyone already sending the proto by hand.
 
 #### 🛍️ Product
 
