@@ -88,6 +88,7 @@ This fork designed for production use with a focus on clarity and safety:
 - [🗄️ Implementing Data Store](#%EF%B8%8F-implementing-data-store)
    - [🧑 Contact names](#-contact-names-sockcontactsgetname)
    - [🎞️ Sticker → GIF/MP4](#%EF%B8%8F-sticker--gifmp4)
+- [👥 Join request — quem aprovou/recusou](#-join-request--quem-aprovourecusou)
 - [🪪 WhatsApp IDs Explain](#-whatsapp-ids-explain)
 - [✉️ Sending Messages](#%EF%B8%8F-sending-messages)
    - [🔠 Text](#-text)
@@ -2666,6 +2667,39 @@ sock.ev.on('newsletter.view', (update) => {})
 sock.ev.on('newsletter-participants.update', (update) => {})
 sock.ev.on('newsletter-settings.update', (update) => {})
 sock.ev.on('settings.update', (update) => {})
+```
+
+#### 👥 Join request — quem aprovou/recusou
+
+`group.join-request` traz o pedido de entrada **e** quem o resolveu. São três
+campos que se confundem:
+
+| campo | quem é |
+|---|---|
+| `participant` / `participantPn` | quem **pediu** para entrar (o afetado) |
+| `author` / `authorPn` | quem **agiu** — quem aprovou ou recusou |
+| `action` | `created` \| `revoked` \| `rejected` |
+
+`revoked` é o **próprio solicitante cancelando** o pedido; `rejected` é um
+**admin recusando**. A distinção sai de comparar o ator com o afetado — quando
+são a mesma pessoa, foi cancelamento.
+
+> [!IMPORTANT]
+> A `action` é **sempre** preenchida. O stub do WhatsApp só a define no caminho
+> de `revoked_membership_requests`; nos demais ela vinha `undefined`, e um
+> consumidor não tinha como separar "pedido novo" de "pedido resolvido" —
+> tratando uma recusa como se fosse um pedido novo. A derivação usa apenas o
+> que a stanza já carrega (ator × afetado), sem inventar nada, e mantém as
+> actions canônicas quando o stub as traz.
+
+```javascript
+sock.ev.on('group.join-request', ({ id, participant, participantPn, author, authorPn, action, method }) => {
+    if (action === 'created') return // pedido novo
+    if (action === 'revoked') return // o solicitante cancelou
+    if (action === 'rejected') {
+        // um admin recusou: `author` é quem recusou
+    }
+})
 ```
 
 ### 📞 Voice & Video Calls (VoIP media)
