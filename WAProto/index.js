@@ -93015,6 +93015,12 @@ export const proto = $root.proto = (() => {
         SyncActionValue.prototype.bizAiSettingsNudgeAction = null;
         SyncActionValue.prototype.coexV2VersionAction = null;
         SyncActionValue.prototype.wasaRootSecretAction = null;
+        SyncActionValue.prototype.groupHistoryToggleAction = null;
+        SyncActionValue.prototype.businessFolderActivationAction = null;
+        SyncActionValue.prototype.contactManagerMetadataAction = null;
+        SyncActionValue.prototype.sharedDeviceAllowlistAction = null;
+        SyncActionValue.prototype.labelSublistAction = null;
+        SyncActionValue.prototype.bubbleLockMessageAction = null;
 
         let $oneOfFields;
 
@@ -93498,6 +93504,36 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        Object.defineProperty(SyncActionValue.prototype, "_groupHistoryToggleAction", {
+            get: $util.oneOfGetter($oneOfFields = ["groupHistoryToggleAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(SyncActionValue.prototype, "_businessFolderActivationAction", {
+            get: $util.oneOfGetter($oneOfFields = ["businessFolderActivationAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(SyncActionValue.prototype, "_contactManagerMetadataAction", {
+            get: $util.oneOfGetter($oneOfFields = ["contactManagerMetadataAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(SyncActionValue.prototype, "_sharedDeviceAllowlistAction", {
+            get: $util.oneOfGetter($oneOfFields = ["sharedDeviceAllowlistAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(SyncActionValue.prototype, "_labelSublistAction", {
+            get: $util.oneOfGetter($oneOfFields = ["labelSublistAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        Object.defineProperty(SyncActionValue.prototype, "_bubbleLockMessageAction", {
+            get: $util.oneOfGetter($oneOfFields = ["bubbleLockMessageAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         SyncActionValue.create = function create(properties) {
             return new SyncActionValue(properties);
         };
@@ -93665,6 +93701,18 @@ export const proto = $root.proto = (() => {
                 $root.proto.SyncActionValue.CoexV2VersionAction.encode(m.coexV2VersionAction, w.uint32(706).fork()).ldelim();
             if (m.wasaRootSecretAction != null && Object.hasOwnProperty.call(m, "wasaRootSecretAction"))
                 $root.proto.SyncActionValue.WASARootSecretAction.encode(m.wasaRootSecretAction, w.uint32(714).fork()).ldelim();
+            if (m.groupHistoryToggleAction != null && Object.hasOwnProperty.call(m, "groupHistoryToggleAction"))
+                $root.proto.SyncActionValue.GroupHistoryToggleAction.encode(m.groupHistoryToggleAction, w.uint32(778).fork()).ldelim();
+            if (m.businessFolderActivationAction != null && Object.hasOwnProperty.call(m, "businessFolderActivationAction"))
+                $root.proto.SyncActionValue.BusinessFolderActivationAction.encode(m.businessFolderActivationAction, w.uint32(770).fork()).ldelim();
+            if (m.contactManagerMetadataAction != null && Object.hasOwnProperty.call(m, "contactManagerMetadataAction"))
+                $root.proto.SyncActionValue.ContactManagerMetadataAction.encode(m.contactManagerMetadataAction, w.uint32(762).fork()).ldelim();
+            if (m.sharedDeviceAllowlistAction != null && Object.hasOwnProperty.call(m, "sharedDeviceAllowlistAction"))
+                $root.proto.SyncActionValue.SharedDeviceAllowlistAction.encode(m.sharedDeviceAllowlistAction, w.uint32(754).fork()).ldelim();
+            if (m.labelSublistAction != null && Object.hasOwnProperty.call(m, "labelSublistAction"))
+                $root.proto.SyncActionValue.LabelSublistAction.encode(m.labelSublistAction, w.uint32(730).fork()).ldelim();
+            if (m.bubbleLockMessageAction != null && Object.hasOwnProperty.call(m, "bubbleLockMessageAction"))
+                $root.proto.SyncActionValue.BubbleLockMessageAction.encode(m.bubbleLockMessageAction, w.uint32(722).fork()).ldelim();
             return w;
         };
 
@@ -93999,6 +94047,30 @@ export const proto = $root.proto = (() => {
                     }
                 case 89: {
                         m.wasaRootSecretAction = $root.proto.SyncActionValue.WASARootSecretAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 97: {
+                        m.groupHistoryToggleAction = $root.proto.SyncActionValue.GroupHistoryToggleAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 96: {
+                        m.businessFolderActivationAction = $root.proto.SyncActionValue.BusinessFolderActivationAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 95: {
+                        m.contactManagerMetadataAction = $root.proto.SyncActionValue.ContactManagerMetadataAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 94: {
+                        m.sharedDeviceAllowlistAction = $root.proto.SyncActionValue.SharedDeviceAllowlistAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 91: {
+                        m.labelSublistAction = $root.proto.SyncActionValue.LabelSublistAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 90: {
+                        m.bubbleLockMessageAction = $root.proto.SyncActionValue.BubbleLockMessageAction.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -94422,6 +94494,36 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.SyncActionValue.wasaRootSecretAction: object expected");
                 m.wasaRootSecretAction = $root.proto.SyncActionValue.WASARootSecretAction.fromObject(d.wasaRootSecretAction, n + 1);
             }
+            if (d.groupHistoryToggleAction != null) {
+                if (typeof d.groupHistoryToggleAction !== "object")
+                    throw TypeError(".proto.SyncActionValue.groupHistoryToggleAction: object expected");
+                m.groupHistoryToggleAction = $root.proto.SyncActionValue.GroupHistoryToggleAction.fromObject(d.groupHistoryToggleAction, n + 1);
+            }
+            if (d.businessFolderActivationAction != null) {
+                if (typeof d.businessFolderActivationAction !== "object")
+                    throw TypeError(".proto.SyncActionValue.businessFolderActivationAction: object expected");
+                m.businessFolderActivationAction = $root.proto.SyncActionValue.BusinessFolderActivationAction.fromObject(d.businessFolderActivationAction, n + 1);
+            }
+            if (d.contactManagerMetadataAction != null) {
+                if (typeof d.contactManagerMetadataAction !== "object")
+                    throw TypeError(".proto.SyncActionValue.contactManagerMetadataAction: object expected");
+                m.contactManagerMetadataAction = $root.proto.SyncActionValue.ContactManagerMetadataAction.fromObject(d.contactManagerMetadataAction, n + 1);
+            }
+            if (d.sharedDeviceAllowlistAction != null) {
+                if (typeof d.sharedDeviceAllowlistAction !== "object")
+                    throw TypeError(".proto.SyncActionValue.sharedDeviceAllowlistAction: object expected");
+                m.sharedDeviceAllowlistAction = $root.proto.SyncActionValue.SharedDeviceAllowlistAction.fromObject(d.sharedDeviceAllowlistAction, n + 1);
+            }
+            if (d.labelSublistAction != null) {
+                if (typeof d.labelSublistAction !== "object")
+                    throw TypeError(".proto.SyncActionValue.labelSublistAction: object expected");
+                m.labelSublistAction = $root.proto.SyncActionValue.LabelSublistAction.fromObject(d.labelSublistAction, n + 1);
+            }
+            if (d.bubbleLockMessageAction != null) {
+                if (typeof d.bubbleLockMessageAction !== "object")
+                    throw TypeError(".proto.SyncActionValue.bubbleLockMessageAction: object expected");
+                m.bubbleLockMessageAction = $root.proto.SyncActionValue.BubbleLockMessageAction.fromObject(d.bubbleLockMessageAction, n + 1);
+            }
             return m;
         };
 
@@ -94831,6 +94933,36 @@ export const proto = $root.proto = (() => {
                 d.wasaRootSecretAction = $root.proto.SyncActionValue.WASARootSecretAction.toObject(m.wasaRootSecretAction, o);
                 if (o.oneofs)
                     d._wasaRootSecretAction = "wasaRootSecretAction";
+            }
+            if (m.groupHistoryToggleAction != null && m.hasOwnProperty("groupHistoryToggleAction")) {
+                d.groupHistoryToggleAction = $root.proto.SyncActionValue.GroupHistoryToggleAction.toObject(m.groupHistoryToggleAction, o);
+                if (o.oneofs)
+                    d._groupHistoryToggleAction = "groupHistoryToggleAction";
+            }
+            if (m.businessFolderActivationAction != null && m.hasOwnProperty("businessFolderActivationAction")) {
+                d.businessFolderActivationAction = $root.proto.SyncActionValue.BusinessFolderActivationAction.toObject(m.businessFolderActivationAction, o);
+                if (o.oneofs)
+                    d._businessFolderActivationAction = "businessFolderActivationAction";
+            }
+            if (m.contactManagerMetadataAction != null && m.hasOwnProperty("contactManagerMetadataAction")) {
+                d.contactManagerMetadataAction = $root.proto.SyncActionValue.ContactManagerMetadataAction.toObject(m.contactManagerMetadataAction, o);
+                if (o.oneofs)
+                    d._contactManagerMetadataAction = "contactManagerMetadataAction";
+            }
+            if (m.sharedDeviceAllowlistAction != null && m.hasOwnProperty("sharedDeviceAllowlistAction")) {
+                d.sharedDeviceAllowlistAction = $root.proto.SyncActionValue.SharedDeviceAllowlistAction.toObject(m.sharedDeviceAllowlistAction, o);
+                if (o.oneofs)
+                    d._sharedDeviceAllowlistAction = "sharedDeviceAllowlistAction";
+            }
+            if (m.labelSublistAction != null && m.hasOwnProperty("labelSublistAction")) {
+                d.labelSublistAction = $root.proto.SyncActionValue.LabelSublistAction.toObject(m.labelSublistAction, o);
+                if (o.oneofs)
+                    d._labelSublistAction = "labelSublistAction";
+            }
+            if (m.bubbleLockMessageAction != null && m.hasOwnProperty("bubbleLockMessageAction")) {
+                d.bubbleLockMessageAction = $root.proto.SyncActionValue.BubbleLockMessageAction.toObject(m.bubbleLockMessageAction, o);
+                if (o.oneofs)
+                    d._bubbleLockMessageAction = "bubbleLockMessageAction";
             }
             return d;
         };
@@ -107067,6 +107199,542 @@ export const proto = $root.proto = (() => {
             })();
 
             return UsernameChatStartModeAction;
+        })();
+
+        SyncActionValue.BubbleLockMessageAction = (function() {
+
+            function BubbleLockMessageAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            BubbleLockMessageAction.prototype.locked = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(BubbleLockMessageAction.prototype, "_locked", {
+                get: $util.oneOfGetter($oneOfFields = ["locked"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            BubbleLockMessageAction.create = function create(properties) {
+                return new BubbleLockMessageAction(properties);
+            };
+
+            BubbleLockMessageAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.locked != null && Object.hasOwnProperty.call(m, "locked"))
+                    w.uint32(8).bool(m.locked);
+                return w;
+            };
+
+            BubbleLockMessageAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.BubbleLockMessageAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.locked = r.bool();
+                            break;
+                        }
+                        default:
+                            r.skipType(t & 7);
+                            break;
+                    }
+                }
+                return m;
+            };
+
+            BubbleLockMessageAction.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.SyncActionValue.BubbleLockMessageAction)
+                    return d;
+                var m = new $root.proto.SyncActionValue.BubbleLockMessageAction();
+                if (d.locked != null) {
+                    m.locked = d.locked;
+                }
+                return m;
+            };
+
+            BubbleLockMessageAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.locked != null && m.hasOwnProperty("locked")) {
+                    d.locked = m.locked;
+                    if (o.oneofs)
+                        d._locked = "locked";
+                }
+                return d;
+            };
+
+            BubbleLockMessageAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            BubbleLockMessageAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.BubbleLockMessageAction";
+            };
+
+            return BubbleLockMessageAction;
+        })();
+
+        SyncActionValue.LabelSublistAction = (function() {
+
+            function LabelSublistAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            LabelSublistAction.prototype.subListID = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(LabelSublistAction.prototype, "_subListID", {
+                get: $util.oneOfGetter($oneOfFields = ["subListID"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            LabelSublistAction.create = function create(properties) {
+                return new LabelSublistAction(properties);
+            };
+
+            LabelSublistAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.subListID != null && Object.hasOwnProperty.call(m, "subListID"))
+                    w.uint32(8).int32(m.subListID);
+                return w;
+            };
+
+            LabelSublistAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.LabelSublistAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.subListID = r.int32();
+                            break;
+                        }
+                        default:
+                            r.skipType(t & 7);
+                            break;
+                    }
+                }
+                return m;
+            };
+
+            LabelSublistAction.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.SyncActionValue.LabelSublistAction)
+                    return d;
+                var m = new $root.proto.SyncActionValue.LabelSublistAction();
+                if (d.subListID != null) {
+                    m.subListID = d.subListID;
+                }
+                return m;
+            };
+
+            LabelSublistAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.subListID != null && m.hasOwnProperty("subListID")) {
+                    d.subListID = m.subListID;
+                    if (o.oneofs)
+                        d._subListID = "subListID";
+                }
+                return d;
+            };
+
+            LabelSublistAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            LabelSublistAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.LabelSublistAction";
+            };
+
+            return LabelSublistAction;
+        })();
+
+        SyncActionValue.SharedDeviceAllowlistAction = (function() {
+
+            function SharedDeviceAllowlistAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            SharedDeviceAllowlistAction.prototype.allowed = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SharedDeviceAllowlistAction.prototype, "_allowed", {
+                get: $util.oneOfGetter($oneOfFields = ["allowed"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            SharedDeviceAllowlistAction.create = function create(properties) {
+                return new SharedDeviceAllowlistAction(properties);
+            };
+
+            SharedDeviceAllowlistAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.allowed != null && Object.hasOwnProperty.call(m, "allowed"))
+                    w.uint32(8).bool(m.allowed);
+                return w;
+            };
+
+            SharedDeviceAllowlistAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.SharedDeviceAllowlistAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.allowed = r.bool();
+                            break;
+                        }
+                        default:
+                            r.skipType(t & 7);
+                            break;
+                    }
+                }
+                return m;
+            };
+
+            SharedDeviceAllowlistAction.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.SyncActionValue.SharedDeviceAllowlistAction)
+                    return d;
+                var m = new $root.proto.SyncActionValue.SharedDeviceAllowlistAction();
+                if (d.allowed != null) {
+                    m.allowed = d.allowed;
+                }
+                return m;
+            };
+
+            SharedDeviceAllowlistAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.allowed != null && m.hasOwnProperty("allowed")) {
+                    d.allowed = m.allowed;
+                    if (o.oneofs)
+                        d._allowed = "allowed";
+                }
+                return d;
+            };
+
+            SharedDeviceAllowlistAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            SharedDeviceAllowlistAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.SharedDeviceAllowlistAction";
+            };
+
+            return SharedDeviceAllowlistAction;
+        })();
+
+        SyncActionValue.ContactManagerMetadataAction = (function() {
+
+            function ContactManagerMetadataAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ContactManagerMetadataAction.prototype.isHidden = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ContactManagerMetadataAction.prototype, "_isHidden", {
+                get: $util.oneOfGetter($oneOfFields = ["isHidden"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ContactManagerMetadataAction.create = function create(properties) {
+                return new ContactManagerMetadataAction(properties);
+            };
+
+            ContactManagerMetadataAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.isHidden != null && Object.hasOwnProperty.call(m, "isHidden"))
+                    w.uint32(8).bool(m.isHidden);
+                return w;
+            };
+
+            ContactManagerMetadataAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.ContactManagerMetadataAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.isHidden = r.bool();
+                            break;
+                        }
+                        default:
+                            r.skipType(t & 7);
+                            break;
+                    }
+                }
+                return m;
+            };
+
+            ContactManagerMetadataAction.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.SyncActionValue.ContactManagerMetadataAction)
+                    return d;
+                var m = new $root.proto.SyncActionValue.ContactManagerMetadataAction();
+                if (d.isHidden != null) {
+                    m.isHidden = d.isHidden;
+                }
+                return m;
+            };
+
+            ContactManagerMetadataAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.isHidden != null && m.hasOwnProperty("isHidden")) {
+                    d.isHidden = m.isHidden;
+                    if (o.oneofs)
+                        d._isHidden = "isHidden";
+                }
+                return d;
+            };
+
+            ContactManagerMetadataAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ContactManagerMetadataAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.ContactManagerMetadataAction";
+            };
+
+            return ContactManagerMetadataAction;
+        })();
+
+        SyncActionValue.BusinessFolderActivationAction = (function() {
+
+            function BusinessFolderActivationAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            BusinessFolderActivationAction.prototype.activated = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(BusinessFolderActivationAction.prototype, "_activated", {
+                get: $util.oneOfGetter($oneOfFields = ["activated"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            BusinessFolderActivationAction.create = function create(properties) {
+                return new BusinessFolderActivationAction(properties);
+            };
+
+            BusinessFolderActivationAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.activated != null && Object.hasOwnProperty.call(m, "activated"))
+                    w.uint32(8).bool(m.activated);
+                return w;
+            };
+
+            BusinessFolderActivationAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.BusinessFolderActivationAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.activated = r.bool();
+                            break;
+                        }
+                        default:
+                            r.skipType(t & 7);
+                            break;
+                    }
+                }
+                return m;
+            };
+
+            BusinessFolderActivationAction.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.SyncActionValue.BusinessFolderActivationAction)
+                    return d;
+                var m = new $root.proto.SyncActionValue.BusinessFolderActivationAction();
+                if (d.activated != null) {
+                    m.activated = d.activated;
+                }
+                return m;
+            };
+
+            BusinessFolderActivationAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.activated != null && m.hasOwnProperty("activated")) {
+                    d.activated = m.activated;
+                    if (o.oneofs)
+                        d._activated = "activated";
+                }
+                return d;
+            };
+
+            BusinessFolderActivationAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            BusinessFolderActivationAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.BusinessFolderActivationAction";
+            };
+
+            return BusinessFolderActivationAction;
+        })();
+
+        SyncActionValue.GroupHistoryToggleAction = (function() {
+
+            function GroupHistoryToggleAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            GroupHistoryToggleAction.GroupHistoryToggleMode = (function() {
+                const valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "GROUP_HISTORY_TOGGLE_MODE_UNKNOWN"] = 0;
+                values[valuesById[1] = "GROUP_HISTORY_TOGGLE_MODE_ON"] = 1;
+                values[valuesById[2] = "GROUP_HISTORY_TOGGLE_MODE_OFF"] = 2;
+                return values;
+            })();
+
+            GroupHistoryToggleAction.prototype.groupHistoryToggleMode = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(GroupHistoryToggleAction.prototype, "_groupHistoryToggleMode", {
+                get: $util.oneOfGetter($oneOfFields = ["groupHistoryToggleMode"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            GroupHistoryToggleAction.create = function create(properties) {
+                return new GroupHistoryToggleAction(properties);
+            };
+
+            GroupHistoryToggleAction.encode = function encode(m, w) {
+                if (!w)
+                    w = $Writer.create();
+                if (m.groupHistoryToggleMode != null && Object.hasOwnProperty.call(m, "groupHistoryToggleMode"))
+                    w.uint32(8).int32(m.groupHistoryToggleMode);
+                return w;
+            };
+
+            GroupHistoryToggleAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.GroupHistoryToggleAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.groupHistoryToggleMode = r.int32();
+                            break;
+                        }
+                        default:
+                            r.skipType(t & 7);
+                            break;
+                    }
+                }
+                return m;
+            };
+
+            GroupHistoryToggleAction.fromObject = function fromObject(d) {
+                if (d instanceof $root.proto.SyncActionValue.GroupHistoryToggleAction)
+                    return d;
+                var m = new $root.proto.SyncActionValue.GroupHistoryToggleAction();
+                if (d.groupHistoryToggleMode != null) {
+                    m.groupHistoryToggleMode = d.groupHistoryToggleMode;
+                }
+                return m;
+            };
+
+            GroupHistoryToggleAction.toObject = function toObject(m, o) {
+                if (!o)
+                    o = {};
+                var d = {};
+                if (m.groupHistoryToggleMode != null && m.hasOwnProperty("groupHistoryToggleMode")) {
+                    d.groupHistoryToggleMode = m.groupHistoryToggleMode;
+                    if (o.oneofs)
+                        d._groupHistoryToggleMode = "groupHistoryToggleMode";
+                }
+                return d;
+            };
+
+            GroupHistoryToggleAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            GroupHistoryToggleAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.GroupHistoryToggleAction";
+            };
+
+            return GroupHistoryToggleAction;
         })();
 
         SyncActionValue.WASARootSecretAction = (function() {

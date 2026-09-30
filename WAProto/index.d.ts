@@ -12879,6 +12879,12 @@ export namespace proto {
         bizAiSettingsNudgeAction?: (proto.SyncActionValue.IBizAISettingsNudgeAction|null);
         coexV2VersionAction?: (proto.SyncActionValue.ICoexV2VersionAction|null);
         wasaRootSecretAction?: (proto.SyncActionValue.IWASARootSecretAction|null);
+        groupHistoryToggleAction?: (proto.SyncActionValue.IGroupHistoryToggleAction|null);
+        businessFolderActivationAction?: (proto.SyncActionValue.IBusinessFolderActivationAction|null);
+        contactManagerMetadataAction?: (proto.SyncActionValue.IContactManagerMetadataAction|null);
+        sharedDeviceAllowlistAction?: (proto.SyncActionValue.ISharedDeviceAllowlistAction|null);
+        labelSublistAction?: (proto.SyncActionValue.ILabelSublistAction|null);
+        bubbleLockMessageAction?: (proto.SyncActionValue.IBubbleLockMessageAction|null);
     }
 
     class SyncActionValue implements ISyncActionValue {
@@ -12963,6 +12969,12 @@ export namespace proto {
         public bizAiSettingsNudgeAction?: (proto.SyncActionValue.IBizAISettingsNudgeAction|null);
         public coexV2VersionAction?: (proto.SyncActionValue.ICoexV2VersionAction|null);
         public wasaRootSecretAction?: (proto.SyncActionValue.IWASARootSecretAction|null);
+        public groupHistoryToggleAction?: (proto.SyncActionValue.IGroupHistoryToggleAction|null);
+        public businessFolderActivationAction?: (proto.SyncActionValue.IBusinessFolderActivationAction|null);
+        public contactManagerMetadataAction?: (proto.SyncActionValue.IContactManagerMetadataAction|null);
+        public sharedDeviceAllowlistAction?: (proto.SyncActionValue.ISharedDeviceAllowlistAction|null);
+        public labelSublistAction?: (proto.SyncActionValue.ILabelSublistAction|null);
+        public bubbleLockMessageAction?: (proto.SyncActionValue.IBubbleLockMessageAction|null);
         public static create(properties?: proto.ISyncActionValue): proto.SyncActionValue;
         public static encode(m: proto.ISyncActionValue, w?: $protobuf.Writer): $protobuf.Writer;
         public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue;
@@ -14825,6 +14837,108 @@ export namespace proto {
             enum ChatStartMode {
                 LID = 1,
                 PN = 2
+            }
+        }
+
+        interface IBubbleLockMessageAction {
+            locked?: (boolean|null);
+        }
+
+        class BubbleLockMessageAction implements IBubbleLockMessageAction {
+            constructor(p?: proto.SyncActionValue.IBubbleLockMessageAction);
+            public locked?: (boolean|null);
+            public static create(properties?: proto.SyncActionValue.IBubbleLockMessageAction): proto.SyncActionValue.BubbleLockMessageAction;
+            public static encode(m: proto.SyncActionValue.IBubbleLockMessageAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.BubbleLockMessageAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.BubbleLockMessageAction;
+            public static toObject(m: proto.SyncActionValue.BubbleLockMessageAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface ILabelSublistAction {
+            subListID?: (number|null);
+        }
+
+        class LabelSublistAction implements ILabelSublistAction {
+            constructor(p?: proto.SyncActionValue.ILabelSublistAction);
+            public subListID?: (number|null);
+            public static create(properties?: proto.SyncActionValue.ILabelSublistAction): proto.SyncActionValue.LabelSublistAction;
+            public static encode(m: proto.SyncActionValue.ILabelSublistAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.LabelSublistAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.LabelSublistAction;
+            public static toObject(m: proto.SyncActionValue.LabelSublistAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface ISharedDeviceAllowlistAction {
+            allowed?: (boolean|null);
+        }
+
+        class SharedDeviceAllowlistAction implements ISharedDeviceAllowlistAction {
+            constructor(p?: proto.SyncActionValue.ISharedDeviceAllowlistAction);
+            public allowed?: (boolean|null);
+            public static create(properties?: proto.SyncActionValue.ISharedDeviceAllowlistAction): proto.SyncActionValue.SharedDeviceAllowlistAction;
+            public static encode(m: proto.SyncActionValue.ISharedDeviceAllowlistAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.SharedDeviceAllowlistAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.SharedDeviceAllowlistAction;
+            public static toObject(m: proto.SyncActionValue.SharedDeviceAllowlistAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IContactManagerMetadataAction {
+            isHidden?: (boolean|null);
+        }
+
+        class ContactManagerMetadataAction implements IContactManagerMetadataAction {
+            constructor(p?: proto.SyncActionValue.IContactManagerMetadataAction);
+            public isHidden?: (boolean|null);
+            public static create(properties?: proto.SyncActionValue.IContactManagerMetadataAction): proto.SyncActionValue.ContactManagerMetadataAction;
+            public static encode(m: proto.SyncActionValue.IContactManagerMetadataAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.ContactManagerMetadataAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.ContactManagerMetadataAction;
+            public static toObject(m: proto.SyncActionValue.ContactManagerMetadataAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IBusinessFolderActivationAction {
+            activated?: (boolean|null);
+        }
+
+        class BusinessFolderActivationAction implements IBusinessFolderActivationAction {
+            constructor(p?: proto.SyncActionValue.IBusinessFolderActivationAction);
+            public activated?: (boolean|null);
+            public static create(properties?: proto.SyncActionValue.IBusinessFolderActivationAction): proto.SyncActionValue.BusinessFolderActivationAction;
+            public static encode(m: proto.SyncActionValue.IBusinessFolderActivationAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.BusinessFolderActivationAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.BusinessFolderActivationAction;
+            public static toObject(m: proto.SyncActionValue.BusinessFolderActivationAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IGroupHistoryToggleAction {
+            groupHistoryToggleMode?: (number|null);
+        }
+
+        class GroupHistoryToggleAction implements IGroupHistoryToggleAction {
+            constructor(p?: proto.SyncActionValue.IGroupHistoryToggleAction);
+            public groupHistoryToggleMode?: (number|null);
+            public static create(properties?: proto.SyncActionValue.IGroupHistoryToggleAction): proto.SyncActionValue.GroupHistoryToggleAction;
+            public static encode(m: proto.SyncActionValue.IGroupHistoryToggleAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.GroupHistoryToggleAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.GroupHistoryToggleAction;
+            public static toObject(m: proto.SyncActionValue.GroupHistoryToggleAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+
+            enum GroupHistoryToggleMode {
+                GROUP_HISTORY_TOGGLE_MODE_UNKNOWN = 0,
+                GROUP_HISTORY_TOGGLE_MODE_ON = 1,
+                GROUP_HISTORY_TOGGLE_MODE_OFF = 2
             }
         }
 
