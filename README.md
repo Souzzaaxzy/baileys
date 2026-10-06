@@ -1495,6 +1495,29 @@ Per-card options that also apply to video:
 > but **no** `caption`/`text` is valid: the media is still attached to the card.
 > A card without `nativeFlow` is also valid — it simply has no buttons.
 
+A card can also be **text-only** (a `text` field with no media — a real text
+card, not an image) and can carry an **audio player** in the footer
+(`audioFooter`). Both build on the same carousel:
+
+```javascript
+sock.sendMessage(jid, {
+   text: '🗂️ Text + audio cards!',
+   cards: [{
+      text: 'Card with only text'
+   }, {
+      text: 'Card with an audio player',
+      audioFooter: {
+         url: './path/to/audio.mp3'
+      }
+   }]
+}, {
+   quoted: message
+})
+```
+
+The optional `carouselCardType` on the message selects the layout
+(`CarouselCardType.UNKNOWN` by default, `HSCROLL_CARDS`, `ALBUM_IMAGE`).
+
 #### 🫙 Hydrated Template
 
 ```javascript

@@ -309,3 +309,13 @@ describe('carousel — helpers', () => {
     assert.equal(hasValidCarouselHeader({}), false);
   });
 });
+
+describe('carousel — carouselCardType', () => {
+  it('usa UNKNOWN por padrão e aceita HSCROLL_CARDS', async () => {
+    const padrao = await build({ text: 't', cards: [{ text: 'a' }] });
+    assert.equal(padrao.carousel.carouselCardType, 0, 'padrão UNKNOWN');
+
+    const hscroll = await build({ text: 't', carouselCardType: 1, cards: [{ text: 'a' }] });
+    assert.equal(hscroll.carousel.carouselCardType, 1, 'HSCROLL_CARDS explícito');
+  });
+});
