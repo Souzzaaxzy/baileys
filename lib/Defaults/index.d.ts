@@ -78,6 +78,7 @@ export namespace DEFAULT_CONNECTION_CONFIG {
 export const MEDIA_PATH_MAP: {
     image: string;
     video: string;
+    gif: string;
     document: string;
     audio: string;
     sticker: string;

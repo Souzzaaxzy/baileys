@@ -6,6 +6,7 @@ export type StickerConvertResult = {
     fps: number;
 };
 export declare const isWebP: (buf: Buffer) => boolean;
+export declare const isGif: (buf: Buffer) => boolean;
 export declare const isAnimatedWebP: (buf: Buffer) => boolean;
 export declare function getStickerFramesInfo(buffer: Buffer): Promise<{
     pages: number;
@@ -23,6 +24,14 @@ export declare function stickerToGif(buffer: Buffer, opts?: {
     loop?: number;
 }): Promise<StickerConvertResult>;
 export declare function stickerToMp4(buffer: Buffer, opts?: {
+    ffmpegPath?: string;
+    fps?: number;
+    width?: number;
+    maxFrames?: number;
+    crf?: number;
+    timeoutMs?: number;
+}): Promise<StickerConvertResult>;
+export declare function gifToMp4(buffer: Buffer, opts?: {
     ffmpegPath?: string;
     fps?: number;
     width?: number;

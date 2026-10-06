@@ -112,6 +112,7 @@ This fork designed for production use with a focus on clarity and safety:
 - [📁 Sending Media Messages](#-sending-media-messages)
    - [🖼️ Image](#%EF%B8%8F-image)
    - [🎥 Video](#-video)
+   - [🎞️ GIF](#%EF%B8%8F-gif)
    - [📃 Sticker](#-sticker)
    - [💽 Audio](#-audio)
    - [🗂️ Document](#%EF%B8%8F-document)
@@ -1080,6 +1081,32 @@ sock.sendMessage(jid, {
    quoted: message
 })
 ```
+
+#### 🎞️ GIF
+
+Send an animated `.gif` as a WhatsApp GIF. The library converts it to a muted,
+looping **MP4 with `gifPlayback: true`** — a raw `.gif` sent as `image`/`video`
+does **not** animate in the client, so `gif:` is the one field that does the
+right thing for you.
+
+```javascript
+sock.sendMessage(jid, {
+   gif: {
+      url: './path/to/animation.gif'   // Buffer, url, stream or path
+   },
+   caption: '🔥 Superb'
+}, {
+   quoted: message
+})
+```
+
+- Uses `sharp` to read the frames and FFmpeg to encode H.264 (same pipeline as
+  `stickerToMp4`); if either is missing it falls back to sending the GIF as a
+  still image.
+- Works as the **header of an interactive card** (`gif:` + `caption` + `nativeFlow`),
+  which is the shape a media card with buttons needs.
+- To convert a GIF yourself, use `gifToMp4(buffer)` (exported alongside
+  `stickerToMp4`).
 
 #### 📃 Sticker
 
