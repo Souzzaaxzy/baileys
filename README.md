@@ -184,6 +184,7 @@ This fork designed for production use with a focus on clarity and safety:
    - 👤 [Group Status Message](#%E2%80%8D%E2%80%8D-group-status)
    - 🔁 [Reshare (`canBeReshared`)](#-reshare-canbereshared)
    - 👉🏻 [Interactive Message](#-sending-interactive-messages) (buttons, lists, native flows, templates, carousels).
+   - 🧾 [WhatsApp Flow (`flow`)](#-whatsapp-flow-flow) — o que da' para fazer (e o limite) **[NEW]**
    - 🎞️ [Status Mention Message](#%EF%B8%8F-status-mention)
    - 📦 [Sticker Pack Message](#-sticker-pack)
    - ✨ [Rich Response Message](#-rich-response) **[NEW]**
@@ -1422,6 +1423,108 @@ sock.sendMessage(jid, {
    quoted: message
 })
 ```
+
+#### 🧾 WhatsApp Flow (`flow`)
+
+> **Read this before using it.** There are **two different things** called
+> "Flow", and only one of them can be driven from this library.
+
+| | **WhatsApp Flows (Meta)** | **Native Flow** |
+|---|---|---|
+| What it is | the official form, drawn by the client from a Flow JSON published in your WABA | the envelope `interactiveMessage.nativeFlowMessage` with its buttons |
+| Needs | a real `flow_id` from the Flows API (WABA + business account) | nothing beyond the socket |
+| This library | builds the button and validates it | sends it, and it renders |
+
+**There is no `flowMessage` field.** Checked against `WAProto/index.d.ts`:
+`flowMessage`, `flowResponseMessage` and a user-message `flowId` **do not exist**.
+A Flow form is a Native Flow button with `name: 'flow'` and a JSON payload — the
+same structure as any other native button. Nothing new was added to the proto.
+
+```javascript
+// --- Open a WhatsApp Flow (needs a real flow_id from your WABA)
+sock.sendMessage(jid, {
+   text: 'Preencha o formulário',
+   footer: 'Abyss',
+   nativeFlow: [{
+      flowId: '1234567890',            // --- Required. From the Flows API.
+      cta: 'Abrir formulário',         // --- flow_cta
+      token: 'sessao-abc',             // --- Optional. Defaults to 'unused'.
+      action: 'navigate',              // --- 'navigate' (default) | 'data_exchange'
+      mode: 'published',               // --- 'published' (default) | 'draft'
+      screen: 'WELCOME',               // --- Optional. First screen.
+      data: { plano: 'pro' }           // --- Optional. Pre-fills the screen.
+   }]
+}, { quoted: message })
+```
+
+The field names written on the wire are Meta's own (`flow_id`, `flow_token`,
+`flow_cta`, `flow_action`, `flow_action_payload`, `flow_message_version`, `mode`).
+
+Declaring a Flow without an id **fails with `FLOW_ID_MISSING`** instead of
+sending a button the recipient cannot open:
+
+```javascript
+// --- throws FlowValidationError { code: 'FLOW_ID_MISSING' }
+await sock.sendMessage(jid, { text: 'x', nativeFlow: [{ flow: { cta: 'Sem id' } }] })
+```
+
+##### ⚠️ Known limitation: the `flow` button is gated by the server
+
+Sending `name: 'flow'` from an **unofficial** library makes the recipient see
+*"You received a message but it is not compatible with your version of
+WhatsApp"* — even on up-to-date iOS and Android. The **same code** with
+`quick_reply` or `cta_url` renders normally. This is reproduced in the wild
+(`whatsmeow` issue #1144, testing nine payload variations: `flow_message_version`
+3 and 4, `mode: draft`/`published`, with and without `flow_action_payload.data`,
+different `flow_token` formats, wrapped in view-once — all fail).
+
+So: **the envelope is ours, the rendering is Meta's.** The button is built and
+serialized correctly, but the client only draws the form when the `flow_id`
+belongs to a Flow published by the business. Plan for the fallback below.
+
+##### The form that always renders
+
+If you need a form the client draws today, without a WABA, use the native
+`single_select` — it opens the same bottom-sheet UI and its answer comes back on
+the same channel:
+
+```javascript
+sock.sendMessage(jid, {
+   text: 'Aluguel — escolha o plano',
+   nativeFlow: [{
+      text: '📋 Escolher plano',
+      sections: [{
+         title: 'Planos',
+         rows: [
+            { title: 'Básico', description: '1 tela', id: 'plano_basico' },
+            { title: 'Pro', description: '4 telas', id: 'plano_pro' }
+         ]
+      }]
+   }]
+}, { quoted: message })
+```
+
+##### Reading the answer
+
+The reply arrives as `interactiveResponseMessage.nativeFlowResponseMessage` and
+is already delivered by `messages.upsert`:
+
+```javascript
+import { parseFlowResponse } from '@souzzaaxzy/baileys'
+
+sock.ev.on('messages.upsert', ({ messages }) => {
+   const msg = messages[0]
+   const resposta = parseFlowResponse(msg.message)
+   if (resposta) {
+      console.log(resposta.name, resposta.params) // --- 'form_teste' { plano: 'pro' }
+   }
+})
+```
+
+Helpers exported by this library: `buildFlowButton`, `buildFlowParams`,
+`parseFlowButtonParams`, `isFlowButton`, `describeFlowButton` (never logs the
+`flow_token`), `buildFlowReply`, `parseFlowResponse`, and the constants
+`FLOW_ACTIONS`, `FLOW_MODES`, `FLOW_MESSAGE_VERSION`, `FLOW_BUTTON_NAME`.
 
 #### 🎬 Carousel with Media (Image & Video)
 
