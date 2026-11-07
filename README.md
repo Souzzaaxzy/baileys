@@ -2962,8 +2962,18 @@ const question = await sock.sendGroupStatusQuestion(groupJid, {
 // -> { key: { id, remoteJid }, ... } — the published WAMessage
 ```
 
-What makes the client render a *question* (rather than text ending in "?") is
-`contextInfo.isQuestion = true` plus the group-status marker. Nothing else.
+What makes the client render a *question* is `contextInfo.isQuestion = true`
+**inside the `questionMessage` envelope** (field 101) plus the group-status
+marker. Setting `isQuestion` on a plain text message does **not** work — the
+client renders ordinary text. That was measured on a real device and is the
+reason the envelope exists:
+
+```
+groupStatusMessageV2
+└── questionMessage            (FutureProofMessage, field 101)
+    └── extendedTextMessage
+        └── contextInfo { isQuestion: true, isGroupStatus: true, ... }
+```
 
 #### 📥 Reading the answers
 

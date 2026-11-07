@@ -93,11 +93,15 @@ describe('group-status: enum e tipos', () => {
 });
 
 describe('group-status: pergunta', () => {
-    it('a pergunta carrega isQuestion no contextInfo', () => {
+    it('a pergunta usa o envelope `questionMessage` (NAO texto com isQuestion solto)', () => {
         const c = buildGroupStatusQuestionContent('Qual música vocês querem?');
-        assert.equal(c.text, 'Qual música vocês querem?');
         assert.equal(c.groupStatus, true);
-        assert.equal(c.contextInfo.isQuestion, true);
+        // A forma ERRADA (texto + contextInfo.isQuestion) foi a que produziu um
+        // status de texto normal no aparelho. Ela NAO pode voltar.
+        assert.equal(c.text, undefined, 'nao pode ser texto solto');
+        assert.equal(c.contextInfo, undefined, 'nao pode ter contextInfo no topo');
+        assert.ok(c.question, 'precisa do envelope question');
+        assert.equal(c.question.text, 'Qual música vocês querem?');
     });
 
     it('recusa pergunta vazia', () => {
@@ -106,17 +110,22 @@ describe('group-status: pergunta', () => {
         assert.throws(() => buildGroupStatusQuestionContent(), /text is required/);
     });
 
-    it('isQuestion (campo 63) sobrevive ao encode/decode', () => {
+    it('a PERGUNTA completa sobrevive ao encode/decode (pelo caminho REAL da fork)', async () => {
+        const { generateWAMessageContent } = await import('../lib/Utils/messages.js');
         const c = buildGroupStatusQuestionContent('Pergunta de teste');
-        const msg = proto.Message.create({
-            extendedTextMessage: {
-                text: c.text,
-                contextInfo: c.contextInfo
-            }
+        const gerado = await generateWAMessageContent(c, {
+            userJid: AUTOR,
+            upload: async () => ({ url: 'https://mmg.whatsapp.net/f', directPath: '/v/f' })
         });
-        const dec = roundTrip(msg);
-        assert.equal(dec.extendedTextMessage.text, 'Pergunta de teste');
-        assert.equal(dec.extendedTextMessage.contextInfo.isQuestion, true);
+        const dec = roundTrip(gerado);
+        // groupStatusMessageV2 -> questionMessage -> extendedTextMessage
+        assert.ok(dec.groupStatusMessageV2, 'precisa estar encapsulado no groupStatus');
+        const qm = dec.groupStatusMessageV2.message.questionMessage;
+        assert.ok(qm, 'o conteudo precisa ser um questionMessage (campo 101)');
+        const inner = qm.message.extendedTextMessage;
+        assert.equal(inner.text, 'Pergunta de teste');
+        assert.equal(inner.contextInfo.isQuestion, true, 'isQuestion (campo 63)');
+        assert.equal(inner.contextInfo.isGroupStatus, true, 'marcador de Group Status');
     });
 });
 
