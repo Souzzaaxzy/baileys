@@ -167,6 +167,11 @@ This fork designed for production use with a focus on clarity and safety:
    - [🐢 "Stuck on connecting"](#-stuck-on-connecting)
    - [🔊 Keeping the call up (and the music playing)](#-keeping-the-call-up-and-the-music-playing)
    - [🎭 The right identity (voice-capable)](#-the-right-identity-voice-capable)
+- [📊 Group Status — Questions & Answers](#-group-status--questions--answers)
+   - [❓ Publishing a question](#-publishing-a-question)
+   - [📥 Reading the answers](#-reading-the-answers)
+   - [↩️ Replying to an answer](#%EF%B8%8F-replying-to-an-answer)
+   - [⚠️ What is proven and what is not](#%EF%B8%8F-what-is-proven-and-what-is-not)
 - [🚀 Try the Bot](#-try-the-bot)
 - [📦 Fork Base](#-fork-base)
 - [📣 Credits](#-credits)
@@ -2915,6 +2920,110 @@ const check = isVoiceCapableConfig(config)
 
 `VOICE_CAPABLE_VERSION` (the pinned 5-part build id) is exported too, if you
 need to reference it directly.
+
+### 📊 Group Status — Questions & Answers
+
+Publish a native **question** on a group status, receive the answers, and reply
+to an individual answer — all with the protocol fields the official client
+actually uses.
+
+> **Group Status only.** This is *not* personal status (`status@broadcast`) and
+> *not* a newsletter/channel. The message is published inside the group, wrapped
+> in `groupStatusMessageV2` — the same path the existing `groupStatus: true`
+> option already uses.
+
+#### The types involved (measured, not guessed)
+
+| type | field in `Message` | role |
+|---|---|---|
+| `groupStatusMessageV2` | 103 (`FutureProofMessage`) | group-status envelope |
+| `statusNotificationMessage` | 98 | **server-generated**, delivered to the AUTHOR |
+| `statusQuestionAnswerMessage` | 105 | answer sent by a VIEWER |
+| `questionReplyMessage` | 106 (`FutureProofMessage`) | reply to an answer |
+| `questionResponseMessage` | 107 | response inside a question/poll |
+| `statusQuotedMessage` | 109 | quote carrying a status preview |
+| `statusStickerInteractionMessage` | 110 | sticker reaction |
+
+And in `ContextInfo`: `isQuestion` (63, bool) and
+`questionReplyQuotedMessage` (68 — `serverQuestionId`, `quotedQuestion`,
+`quotedResponse`).
+
+The distinction that shapes the design: `StatusQuestionAnswerMessage` is the
+viewer→author answer, while `StatusNotificationMessage` is **emitted by the
+server** and delivered to the author when someone interacts. Since the bot is
+the author, **what arrives is the notification**.
+
+#### ❓ Publishing a question
+
+```js
+const question = await sock.sendGroupStatusQuestion(groupJid, {
+  text: 'Qual música vocês querem ouvir hoje?'
+})
+// -> { key: { id, remoteJid }, ... } — the published WAMessage
+```
+
+What makes the client render a *question* (rather than text ending in "?") is
+`contextInfo.isQuestion = true` plus the group-status marker. Nothing else.
+
+#### 📥 Reading the answers
+
+Two ways. **The event** (recommended — it fires from `upsertMessage`, so it also
+covers offline messages):
+
+```js
+sock.ev.on('group-status.answer', ({ statusId, responseId, participant, pushName, source }) => {
+  // statusId    -> id of the status that carried the question
+  // responseId  -> id of the answer
+  // participant -> JID/LID of whoever answered
+  // pushName    -> display name, when the server sends it
+  // source      -> 'notification' (server) | 'answer' (viewer)
+})
+```
+
+**Or synchronously**, from a raw message:
+
+```js
+const answer = sock.getGroupStatusAnswer(msg.message)
+// null for anything that is not an answer
+```
+
+#### ↩️ Replying to an answer
+
+```js
+await sock.replyGroupStatusAnswer({
+  groupJid,
+  text: 'Sua sugestão foi anotada!',
+  quotedQuestion: question.message,   // the question Message
+  quotedResponse: answerMessage       // the answer Message
+})
+```
+
+This uses `contextInfo.questionReplyQuotedMessage` — the native mechanism that
+carries both the original question and its response so the client can render the
+reply anchored. It is **not** a plain message quoting text.
+
+#### ⚠️ What is proven and what is not
+
+Proven by tests (`tests/group-status.test.js`, 23 tests):
+
+- every field above survives a real `encode`/`decode` round-trip;
+- the question carries `isQuestion`; the reply carries
+  `questionReplyQuotedMessage` with both sides;
+- the notification is parsed, including `STATUS_GROUP_STATUS_REPLY = 4`;
+- `group-status.answer` is actually emitted on `upsertMessage`, and **not**
+  emitted for ordinary messages.
+
+**Not proven** (needs two real WhatsApp accounts — the environment has no
+session):
+
+- that the official client *renders* the question card;
+- that answering it makes the server send `type = 4`;
+- that the reply renders anchored on the device;
+- the outbound routing of the reply (group vs. direct chat).
+
+The construction is grounded in the proto and in the official-client reference
+(`Auties00/Cobalt`) — but "the payload is correct" and "the client shows it" are
+different claims, and only the first one is tested here.
 
 ### 🚀 Try the Bot
 
